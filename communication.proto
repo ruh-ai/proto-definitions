@@ -1,0 +1,259 @@
+syntax = "proto3";
+
+package communication;
+
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/empty.proto";
+import "google/protobuf/any.proto";
+import "google/protobuf/struct.proto";
+
+// Communication service definition
+service CommunicationService {
+    rpc createConversation(CreateConversationRequest) returns (Conversation);
+    rpc getConversation(GetConversationRequest) returns (Conversation);
+    rpc deleteConversation(DeleteConversationRequest) returns (google.protobuf.Empty);
+    rpc listConversations(ListConversationsRequest) returns (ListConversationsResponse);
+    rpc updateConversationTokens(UpdateConversationTokensRequest) returns (google.protobuf.Empty);
+
+    rpc createMessage(CreateMessageRequest) returns (Message);
+    rpc deleteMessage(DeleteMessageRequest) returns (google.protobuf.Empty);
+    rpc listMessages(ListMessagesRequest) returns (ListMessagesResponse);
+    rpc updateMessageWorkflowResponse(UpdateMessageWorkflowResponseRequest) returns (Message);
+    rpc updateMessageStatus(UpdateMessageStatusRequest) returns (Message);
+
+    rpc createTask(CreateTaskRequest) returns (Task);
+    rpc deleteTask(DeleteTaskRequest) returns (google.protobuf.Empty);
+    rpc listTasks(ListTasksRequest) returns (ListTasksResponse);
+    rpc updateTaskStatus(UpdateTaskStatusRequest) returns (google.protobuf.Empty);
+
+    rpc getTaskCountsByStatus(GetTaskCountsByStatusRequest) returns (GetTaskCountsByStatusResponse);
+}
+
+// Conversation Related Enums & Messages
+
+// Enum for chat types agent, global
+enum ChatType {
+    CHAT_TYPE_UNSPECIFIED = 0;
+    CHAT_TYPE_AGENT = 1;
+    CHAT_TYPE_GLOBAL = 2;
+}
+
+// Conversation model
+message Conversation {
+    string id = 1;
+    string userId = 2;
+    optional string agentId = 3;
+    ChatType chatType = 4;
+    int32 inputTokens = 5;
+    int32 outputTokens = 6;
+    google.protobuf.Timestamp createdAt = 7;
+    google.protobuf.Timestamp updatedAt = 8;
+    optional string title = 9;
+    repeated Task tasks = 10;
+}
+
+// Request messages for conversation operations
+message CreateConversationRequest {
+    string userId = 1;
+    optional string agentId = 2;
+    ChatType chatType = 3;
+}
+
+message GetConversationRequest {
+    string conversationId = 1;
+    string userId = 2;
+}
+
+message DeleteConversationRequest {
+    string conversationId = 1;
+    string userId = 2;
+}
+
+message ListConversationsRequest {
+    string userId = 1;
+    ChatType chatType = 2;
+    int32 page = 3;
+    int32 limit = 4;
+    optional string agentId = 5;
+    optional string search = 6;
+}
+
+message UpdateConversationTokensRequest {
+    string conversationId = 1;
+    optional int32 inputTokens = 2;
+    optional int32 outputTokens = 3;
+    string userId = 4;
+}
+
+message PaginationMetadata {
+    int32 total = 1;
+    int32 totalPages = 2;
+    int32 currentPage = 3;
+    int32 pageSize = 4;
+    bool hasNextPage = 5;
+    bool hasPreviousPage = 6;
+}
+
+message ListConversationsResponse {
+    repeated Conversation data = 1;
+    PaginationMetadata metadata = 2;
+}
+
+// Message Related Enums & Messages
+
+// Enum for sender types
+enum SenderType {
+    SENDER_TYPE_UNSPECIFIED = 0;
+    SENDER_TYPE_USER = 1;
+    SENDER_TYPE_ASSISTANT = 2;
+}
+
+// Enum for message status
+enum MessageStatus {
+    MESSAGE_STATUS_UNSPECIFIED = 0;
+    MESSAGE_STATUS_RUNNING = 1;
+    MESSAGE_STATUS_COMPLETED = 2;
+}
+
+// Enum for message type
+enum MessageType {
+    MESSAGE_TYPE_UNSPECIFIED = 0;
+    MESSAGE_TYPE_CHAT = 1;
+    MESSAGE_TYPE_MCP = 2;
+    MESSAGE_TYPE_WORKFLOW = 3;
+    MESSAGE_TYPE_USER_MESSAGE = 4;
+}
+
+// Message model
+message Message {
+    string id = 1;
+    string conversationId = 2;
+    SenderType senderType = 3;
+    optional google.protobuf.Struct data = 4;
+    optional string workflowId = 5;
+    repeated google.protobuf.Struct workflowResponse = 6;
+    google.protobuf.Timestamp createdAt = 7;
+    google.protobuf.Timestamp updatedAt = 8;
+    optional MessageStatus status = 9;
+    MessageType type = 10;
+}
+
+// Request messages for message operations
+message CreateMessageRequest {
+    string conversationId = 1;
+    SenderType senderType = 2;
+    optional google.protobuf.Struct data = 3;
+    optional string workflowId = 4;
+    repeated google.protobuf.Struct workflowResponse = 5;
+    string userId = 6;
+    optional MessageStatus status = 7;
+    MessageType type = 8;
+}
+
+message DeleteMessageRequest {
+    string messageId = 1;
+    string userId = 2;
+}
+
+message UpdateMessageWorkflowResponseRequest {
+    string messageId = 1;
+    string userId = 2;
+    google.protobuf.Struct newWorkflowResponse = 3;
+}
+
+message UpdateMessageStatusRequest {
+    string messageId = 1;
+    string userId = 2;
+    MessageStatus status = 3;
+}
+
+message ListMessagesRequest {
+    string conversationId = 1;
+    int32 page = 2;
+    int32 limit = 3;
+    string userId = 4;
+}
+
+message ListMessagesResponse {
+    repeated Message data = 1;
+    PaginationMetadata metadata = 2;
+}
+
+// Enum for task statuses 
+enum TaskStatus {
+    TASK_STATUS_UNSPECIFIED = 0;
+    TASK_STATUS_RUNNING = 1;
+    TASK_STATUS_COMPLETED = 2;
+    TASK_STATUS_FAILED = 3;
+    TASK_STATUS_PAUSED = 4;
+    TASK_STATUS_CANCELLED = 5;
+}
+
+// Task model
+message Task {
+    string id = 1;
+    string title = 2;
+    string globalChatConversationId = 3;
+    string agentConversationId = 4;
+    string agentId = 5;
+    optional string correlationId = 6;
+    TaskStatus taskStatus = 7;
+    optional string sessionId = 8;
+    google.protobuf.Timestamp createdAt = 9;
+    google.protobuf.Timestamp updatedAt = 10;
+}
+
+// Request messages for task operations
+message CreateTaskRequest {
+    string globalChatConversationId = 1;
+    string title = 2;
+    string agentConversationId = 3;
+    string agentId = 4;
+    optional string correlationId = 5;
+    TaskStatus taskStatus = 6;
+    optional string sessionId = 7;
+    string userId = 8;
+}
+
+message DeleteTaskRequest {
+    string taskId = 1;
+    string userId = 2;
+}
+
+message UpdateTaskStatusRequest {
+    string taskId = 1;
+    TaskStatus taskStatus = 2;
+    string userId = 3;
+}
+
+message ListTasksRequest {
+    string globalChatConversationId = 1;
+    int32 page = 2;
+    int32 limit = 3;
+    string userId = 4;
+    optional string agentId = 5;
+    optional string search = 6;
+    optional TaskStatus taskStatus = 7;
+}
+
+message ListTasksResponse {
+    repeated Task data = 1;
+    PaginationMetadata metadata = 2;
+}
+
+// Task count statistics for an agent
+message TaskCounts {
+    int32 total = 1;
+    int32 completed = 2;
+    int32 inProgress = 3;
+}
+
+// Request message for getting task counts by status
+message GetTaskCountsByStatusRequest {
+    repeated string agentIds = 1;
+}
+
+// Response message for getting task counts by status
+message GetTaskCountsByStatusResponse {
+    map<string, TaskCounts> taskCounts = 1;
+}

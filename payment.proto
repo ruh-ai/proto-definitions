@@ -1,0 +1,301 @@
+syntax = "proto3";
+
+package payment;
+
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/struct.proto";
+
+// --- Enums ---
+
+enum PlanType {
+  PLAN_TYPE_UNSPECIFIED = 0;
+  FREE = 1;
+  PRO = 2;
+}
+
+enum CreditTransactionType {
+  CREDIT_TRANSACTION_TYPE_UNSPECIFIED = 0;
+  INITIAL_ALLOCATION = 1;
+  USAGE_DEDUCTION = 2;
+  CREDIT_PURCHASE = 3;
+  PLAN_CHANGE_ADJUSTMENT = 4;
+  MANUAL_ADJUSTMENT = 5;
+  REFUND = 6;
+}
+
+enum SubscriptionStatus {
+  SUBSCRIPTION_STATUS_UNSPECIFIED = 0;
+  ACTIVE = 1;
+  CANCELED = 2;
+  INCOMPLETE = 3;
+  PAST_DUE = 4;
+  TRIALING = 5;
+}
+
+// --- Messages ---
+
+message GenericResponse {
+  bool success = 1;
+  string error_message = 2;
+}
+
+message ActivateDefaultPlanRequest {
+  string organisation_id = 1;
+}
+
+message DeductCreditsRequest {
+  string organisation_id = 1;
+  string user_id = 2;
+  string agent_id = 3;
+  int32 input_tokens = 4;
+  int32 output_tokens = 5;
+  double consumed_credits = 6;
+  string description = 7;
+}
+
+message DeductCreditsResponse {
+  bool success = 1;
+  string error_message = 2;
+  double new_balance_after_deduction = 3;
+}
+
+message CreateCheckoutSessionRequest {
+    string organisation_id = 1;
+    string plan_id_code = 2; // "pro"
+    string success_url = 3;
+    string cancel_url = 4;
+}
+
+message CreateCheckoutSessionResponse {
+    string checkout_url = 1;
+    string session_id = 2;
+    bool success = 3;
+    string error_message = 4;
+}
+
+message CreateCustomerPortalSessionRequest {
+  string organisation_id = 1;
+  string return_url = 2;
+}
+
+message CreateCustomerPortalSessionResponse {
+  string portal_url = 1;
+  bool success = 2;
+  string error_message = 3;
+}
+
+message StripeWebhookRequest {
+  bytes payload = 1;
+  string signature = 2;
+}
+
+message SubscriptionDetails {
+    string id = 1;
+    string organisation_id = 2;
+    string plan_id_code = 3;
+    SubscriptionStatus status = 4;
+    google.protobuf.Timestamp current_period_start = 5;
+    google.protobuf.Timestamp current_period_end = 6;
+    double subscription_credits = 7;
+    double current_credits = 8;
+}
+
+message GetSubscriptionRequest {
+    string organisation_id = 1;
+}
+
+message GetSubscriptionResponse {
+    SubscriptionDetails subscription = 1;
+    bool success = 2;
+    string error_message = 3;
+}
+
+message CancelSubscriptionRequest {
+    string organisation_id = 1;
+}
+
+message GetCreditBalanceRequest {
+    string organisation_id = 1;
+}
+
+message GetCreditBalanceResponse {
+    double credit_balance = 1;
+    bool success = 2;
+    string error_message = 3;
+}
+
+message TokenUsageLogEntry {
+    string id = 1;
+    string organisation_id = 2;
+    string user_id = 3;
+    int32 input_tokens = 4;
+    int32 output_tokens = 5;
+    double total_cost = 6;
+    double total_credits = 7;
+    string date = 8;
+}
+
+message GetTokenUsageRequest {
+    string organisation_id = 1;
+    string user_id = 2;
+    google.protobuf.Timestamp start_date = 3;
+    google.protobuf.Timestamp end_date = 4;
+}
+
+message GetTokenUsageResponse {
+    repeated TokenUsageLogEntry token_usage_logs = 1;
+    bool success = 2;
+    string error_message = 3;
+}
+
+message Plan {
+    int32 id = 1;
+    string plan_id_code = 2;
+    string name = 3;
+    double credit_amount = 4;
+    double price = 5;
+    string stripe_price_id = 6;
+    bool is_default = 7;
+}
+
+message CreatePlanRequest {
+    string name = 1;
+    double credit_amount = 2;
+    double price = 3;
+    string stripe_price_id = 4;
+    bool is_default = 5;
+}
+
+message ListPlansRequest {
+    int32 page = 1;
+    int32 page_size = 2;
+}
+
+message ListPlansResponse {
+    bool success = 1;
+    string message = 2;
+    repeated Plan plans = 3;
+    PaginationMetadata metadata = 4;
+}
+
+message CalculateCreditsRequest {
+    int32 input_tokens = 1;
+    int32 output_tokens = 2;
+    double input_price_per_token = 3;
+    double output_price_per_token = 4;
+}
+
+message CalculateCreditsResponse {
+    bool success = 1;
+    string message = 2;
+    double credits = 3;
+    double cost_in_usd = 4;
+    double input_price_per_token = 5;
+    double output_price_per_token = 6;
+}
+
+// --- Topup Plan Messages ---
+
+message TopupPlan {
+    int32 id = 1;
+    string plan_id_code = 2;
+    string name = 3;
+    double credit_amount = 4;
+    double price = 5;
+    string stripe_price_id = 6;
+}
+
+message CreateTopupCheckoutSessionRequest {
+    string organisation_id = 1;
+    string topup_plan_id_code = 2;
+    string success_url = 3;
+    string cancel_url = 4;
+}
+
+message CreateTopupCheckoutSessionResponse {
+    string checkout_url = 1;
+    string session_id = 2;
+    bool success = 3;
+    string error_message = 4;
+}
+
+message ListTopupPlansRequest {
+    int32 page = 1;
+    int32 page_size = 2;
+}
+
+message ListTopupPlansResponse {
+    bool success = 1;
+    string message = 2;
+    repeated TopupPlan topup_plans = 3;
+    PaginationMetadata metadata = 4;
+}
+
+message CreateTopupPlanRequest {
+    string name = 1;
+    double credit_amount = 2;
+    double price = 3;
+    string stripe_price_id = 4;
+}
+
+message GetPaymentTransactionsRequest {
+    string organisation_id = 1;
+    int32 page = 2;
+    int32 page_size = 3;
+}
+
+message PaymentTransactionInfo {
+    string id = 1;
+    string organisation_id = 2;
+    string transaction_type = 3;
+    string status = 4;
+    int32 amount_currency = 5;
+    string currency = 6;
+    string description = 7;
+    string stripe_charge_id = 8;
+    string stripe_invoice_id = 9;
+    string invoice_url = 10;
+    string subscription_id = 11;
+    string created_at = 12;
+}
+
+message GetPaymentTransactionsResponse {
+    bool success = 1;
+    string message = 2;
+    repeated PaymentTransactionInfo transactions = 3;
+    PaginationMetadata metadata = 4;
+}
+
+// Common Pagination Metadata
+message PaginationMetadata {
+    int32 current_page = 1;
+    int32 total_pages = 2;
+    int32 total_items = 3;
+    int32 page_size = 4;
+}
+
+
+// --- Service Definition ---
+
+service PaymentService {
+  rpc ActivateDefaultPlan(ActivateDefaultPlanRequest) returns (SubscriptionDetails);
+  rpc DeductCredits(DeductCreditsRequest) returns (DeductCreditsResponse);
+  rpc CreateCheckoutSession(CreateCheckoutSessionRequest) returns (CreateCheckoutSessionResponse);
+  rpc CreateCustomerPortalSession(CreateCustomerPortalSessionRequest) returns (CreateCustomerPortalSessionResponse);
+  rpc HandleStripeWebhook(StripeWebhookRequest) returns (GenericResponse);
+  rpc GetSubscription(GetSubscriptionRequest) returns (GetSubscriptionResponse);
+  rpc CancelSubscription(CancelSubscriptionRequest) returns (GenericResponse);
+  rpc GetCreditBalance(GetCreditBalanceRequest) returns (GetCreditBalanceResponse);
+  rpc GetTokenUsage(GetTokenUsageRequest) returns (GetTokenUsageResponse);
+  rpc CreatePlan(CreatePlanRequest) returns (Plan);
+  rpc ListPlans(ListPlansRequest) returns (ListPlansResponse);
+  rpc CalculateCredits(CalculateCreditsRequest) returns (CalculateCreditsResponse);
+
+  // Topup Plan RPCs
+  rpc CreateTopupCheckoutSession(CreateTopupCheckoutSessionRequest) returns (CreateTopupCheckoutSessionResponse);
+  rpc ListTopupPlans(ListTopupPlansRequest) returns (ListTopupPlansResponse);
+  rpc CreateTopupPlan(CreateTopupPlanRequest) returns (TopupPlan);
+
+  // Payment Transaction RPCs
+  rpc GetPaymentTransactions(GetPaymentTransactionsRequest) returns (GetPaymentTransactionsResponse);
+}

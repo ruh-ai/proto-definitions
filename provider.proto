@@ -1,0 +1,165 @@
+syntax = "proto3";
+
+package provider;
+
+// Provider Service
+service ProviderService {
+  rpc CreateProvider(CreateProviderRequest) returns (ProviderResponse);
+  rpc GetProvider(GetByIdRequest) returns (ProviderResponse);
+  rpc UpdateProvider(UpdateProviderRequest) returns (ProviderResponse);
+  rpc DeleteProvider(DeleteRequest) returns (DeleteResponse);
+  rpc ListProviders(ListRequest) returns (ListProvidersResponse);
+}
+
+// Model Service
+service ModelService {
+  rpc CreateModel(CreateModelRequest) returns (ModelResponse);
+  rpc GetModel(GetByIdRequest) returns (ModelResponse);
+  rpc UpdateModel(UpdateModelRequest) returns (ModelResponse);
+  rpc DeleteModel(DeleteRequest) returns (DeleteResponse);
+  rpc ListModels(ListRequest) returns (ListModelsResponse);
+  rpc ListModelsByProvider(GetByProviderRequest) returns (ListModelsResponse);
+}
+
+// Common Request Messages
+message GetByIdRequest {
+  string id = 1;
+}
+
+message DeleteRequest {
+  string id = 1;
+}
+
+message DeleteResponse {
+  bool success = 1;
+  string message = 2;
+}
+
+message ListRequest {
+  int32 page = 1;
+  int32 pageSize = 2;
+  optional bool isActive = 3;
+  optional string providerId = 4;
+}
+
+message GetByProviderRequest {
+  string providerId = 1;
+  int32 page = 2;
+  int32 pageSize = 3;
+  optional bool isActive = 4;
+}
+
+// Provider Messages
+message CreateProviderRequest {
+  string provider = 1;
+  optional string description = 2;
+  string baseUrl = 3;
+  optional bool isActive = 4;
+  optional bool isDefault = 5;
+}
+
+message UpdateProviderRequest {
+  string id = 1;
+  optional string provider = 2;
+  optional string description = 3;
+  optional string baseUrl = 4;
+  optional bool isActive = 5;
+  optional bool isDefault = 6;
+}
+
+message ProviderResponse {
+  bool success = 1;
+  string message = 2;
+  optional ProviderInfo provider = 3;
+}
+
+message ListProvidersResponse {
+  bool success = 1;
+  string message = 2;
+  repeated ProviderInfo providers = 3;
+  PaginationInfo pagination = 4;
+}
+
+message ProviderInfo {
+  string id = 1;
+  string provider = 2;
+  optional string description = 3;
+  string baseUrl = 4;
+  bool isActive = 5;
+  bool isDefault = 6;
+  string createdAt = 7;
+  string updatedAt = 8;
+  int32 modelCount = 9; // Number of models for this provider
+}
+
+// Model Messages
+message CreateModelRequest {
+  string providerId = 1;
+  string model = 2;
+  string modelId = 3;
+  optional string description = 4;
+  optional float inputPricePerToken = 5;
+  optional float outputPricePerToken = 6;
+  optional int32 maxTokens = 7;
+  optional int32 contextWindow = 8;
+  optional float temperature = 9;
+  optional string providerType = 10;
+  optional bool isActive = 11;
+  optional bool isDefault = 12;
+}
+
+message UpdateModelRequest {
+  string id = 1;
+  optional string providerId = 2;
+  optional string model = 3;
+  optional string modelId = 4;
+  optional string description = 5;
+  optional float inputPricePerToken = 6;
+  optional float outputPricePerToken = 7;
+  optional int32 maxTokens = 8;
+  optional int32 contextWindow = 9;
+  optional float temperature = 10;
+  optional string providerType = 11;
+  optional bool isActive = 12;
+  optional bool isDefault = 13;
+}
+
+message ModelResponse {
+  bool success = 1;
+  string message = 2;
+  optional ModelInfo model = 3;
+}
+
+message ListModelsResponse {
+  bool success = 1;
+  string message = 2;
+  repeated ModelInfo models = 3;
+  PaginationInfo pagination = 4;
+}
+
+message ModelInfo {
+  string id = 1;
+  string providerId = 2;
+  string model = 3;
+  string modelId = 4;
+  optional string description = 5;
+  optional float inputPricePerToken = 6;
+  optional float outputPricePerToken = 7;
+  optional int32 maxTokens = 8;
+  optional int32 contextWindow = 9;
+  optional float temperature = 10;
+  string providerType = 11;
+  bool isActive = 12;
+  bool isDefault = 13;
+  string createdAt = 14;
+  string updatedAt = 15;
+  ProviderInfo provider = 16; // Include provider info in model response
+}
+
+// Common Pagination
+message PaginationInfo {
+  int32 currentPage = 1;
+  int32 totalPages = 2;
+  int32 totalItems = 3;
+  int32 pageSize = 4;
+}

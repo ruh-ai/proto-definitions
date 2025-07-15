@@ -1,0 +1,677 @@
+syntax = "proto3";
+
+package user;
+
+service UserService {
+  // Authentication
+  rpc register(RegisterRequest) returns (RegisterResponse);
+  rpc updateEmailVerifiedDetails(UpdateEmailVerificationDetails) returns (UpdateEmailVerifiedDetailsResponse);
+  rpc login(LoginRequest) returns (LoginResponse);
+  rpc googleOAuthLogin(GoogleOAuthRequest) returns (LoginResponse);
+  rpc refreshToken(RefreshTokenRequest) returns (RefreshTokenResponse);
+  rpc accessToken(AccessTokenRequest) returns (AccessTokenResponse);
+  rpc generateResetPasswordOTP(ResetPasswordOTPRequest) returns(ResetPasswordOTPResponse);
+  rpc updatePassword(UpdatePasswordRequest) returns(UpdatePasswordResponse);
+  rpc resetPassword(ResetPasswordRequest) returns(ResetPasswordResponse);
+  rpc updateUserProfileDetails(UpdateUserProfileDetailsRequest) returns (UserResponse);
+
+  // User Management
+  rpc getUser(GetUserRequest) returns (UserResponse);
+  rpc updateUser(UpdateUserRequest) returns (UserResponse);
+  rpc deleteUser(DeleteUserRequest) returns (DeleteUserResponse);
+  rpc listUsers(ListUsersRequest) returns (ListUsersResponse);
+  rpc searchUsers(SearchUsersRequest) returns (ListUsersResponse);
+
+
+  // New RPCs for Stripe Customer ID
+  rpc updateStripeCustomerId(UpdateStripeCustomerIdRequest) returns (UpdateStripeCustomerIdResponse);
+  rpc fetchStripeCustomerId(FetchStripeCustomerIdRequest) returns (FetchStripeCustomerIdResponse);
+
+
+  // --- New Waitlist RPC ---
+  rpc addToWaitlist(AddToWaitlistRequest) returns (AddToWaitlistResponse);
+  rpc getWaitlist(GetWaitlistRequest) returns (GetWaitlistResponse);
+  rpc approveWaitlistUser(ApproveWaitlistUserRequest) returns (ApproveWaitlistUserResponse);
+  rpc approveMultipleWaitlistUsers(ApproveMultipleWaitlistUsersRequest) returns (ApproveMultipleWaitlistUsersResponse);
+
+  rpc validateUser(ValidateUserRequest) returns (ValidateUserResponse);
+  rpc getUsersByIds(GetUsersByIdsRequest) returns (GetUsersByIdsResponse);
+
+  // API Key management
+  rpc GenerateAPIKey(GenerateAPIKeyRequest) returns (GenerateAPIKeyResponse);
+  rpc ListAPIKeys(ListAPIKeysRequest) returns (ListAPIKeysResponse);
+  rpc DeleteAPIKey(DeleteAPIKeyRequest) returns (DeleteAPIKeyResponse);
+  rpc GetAPIKeyById(GetAPIKeyByIdRequest) returns (GetAPIKeyByIdResponse);
+
+  //Admin
+  rpc getAllUsers(GetAllUsersRequest) returns (GetAllUsersResponse);
+
+  // --- Organization RPCs ---
+  rpc createOrganization(CreateOrganizationRequest) returns (OrganizationResponse);
+  rpc getOrganization(GetOrganizationRequest) returns (OrganizationResponse);
+  rpc updateOrganization(UpdateOrganizationRequest) returns (OrganizationResponse);
+  rpc deleteOrganization(DeleteOrganizationRequest) returns (DeleteOrganizationResponse);
+  rpc addUserToOrganization(AddUserToOrganizationRequest) returns (OrganizationResponse);
+  rpc removeUserFromOrganization(RemoveUserFromOrganizationRequest) returns (OrganizationResponse);
+  rpc listUserOrganizations(ListUserOrganizationsRequest) returns (ListOrganizationsResponse); // Lists orgs where the user is owner or member
+  rpc generateOrganisationTokens(GenerateOrganisationTokensRequest) returns (GenerateOrganisationTokensResponse);
+
+  // Credential Management
+  rpc CreateCredential(CreateCredentialRequest) returns (CreateCredentialResponse);
+  rpc GetCredential(GetCredentialRequest) returns (GetCredentialResponse);
+  rpc ListCredentials(ListCredentialsRequest) returns (ListCredentialsResponse);
+  rpc DeleteCredential(DeleteCredentialRequest) returns (DeleteCredentialResponse);
+  rpc UpdateCredential(UpdateCredentialRequest) returns (UpdateCredentialResponse);
+
+  // Git Token Update
+  rpc updateUserGitToken(UpdateUserGitToken) returns (UserResponse);
+  rpc getUserGitHubToken(GetUserGitHubTokenRequest) returns (GetUserGitHubTokenResponse);
+
+
+
+  // User Preferences
+  rpc CreatePreference(CreatePreferenceRequest) returns (CreatePreferenceResponse);
+  rpc GetPreference(GetPreferenceRequest) returns (GetPreferenceResponse);
+  rpc UpdatePreference(UpdatePreferenceRequest) returns (UpdatePreferenceResponse);
+  rpc ListPreferences(ListPreferencesRequest) returns (ListPreferencesResponse);
+}
+
+// Request/Response messages
+message RegisterRequest {
+  string email = 1;
+  string password = 2;
+  string fullName = 3;
+  string organizationId = 4;
+}
+
+message RegisterResponse {
+  bool success = 1;
+  string message = 2;
+}
+
+message UpdateEmailVerificationDetails {
+    string token = 1;
+}
+
+message UpdateEmailVerifiedDetailsResponse{
+    bool success = 1;
+	  string message = 2;
+    string email = 3;
+    string name = 4;
+}
+
+message LoginRequest {
+    string email = 1;
+    string password = 2;
+    string fcmToken = 3;  // Add FCM token field
+}
+
+message LoginResponse {
+  bool success = 1;
+  string message = 2;
+  string accessToken = 3;
+  string refreshToken = 4;
+  UserInfo user = 5;
+  int64 accessTokenAge = 6;  // Access token expiration timestamp
+  int64 refreshTokenAge = 7; // Refresh token expiration timestamp
+}
+
+message GoogleOAuthRequest {
+  string email = 1;
+  string fullName = 2;
+  string googleId = 3;
+  string accessToken = 4;
+  string refreshToken = 5;
+}
+
+message RefreshTokenRequest {
+  string refreshToken = 1;
+}
+
+message RefreshTokenResponse {
+  string accessToken = 1;
+  string refreshToken = 2;
+}
+
+
+message AccessTokenRequest {
+  string refreshToken = 1;
+}
+
+message AccessTokenResponse {
+  bool success=1;
+  string accessToken=2;
+  string tokenExpireAt=3;
+  int64 accessTokenAge=4;  // Access token expiration timestamp
+}
+
+message ResetPasswordOTPRequest{
+  string email=1;
+}
+
+message ResetPasswordOTPResponse{
+  bool success=1;
+  string message=2;
+}
+
+message UpdatePasswordRequest{
+  string token=1;
+  string newPassword=2;
+  string ConfirmNewPassword=3;
+}
+
+message UpdatePasswordResponse{
+  bool success = 1;
+  string message = 2;
+}
+
+message ResetPasswordRequest{
+  string userId = 1;
+  string currentPassword = 2;
+  string newPassword = 3;
+  string confirmNewPassword = 4;
+}
+
+message ResetPasswordResponse{
+  bool success = 1;
+  string message = 2;
+}
+
+message GetUserRequest {
+  string userId = 1;
+}
+
+message UserResponse {
+  bool success = 1;
+  string message = 2;
+  UserInfo user = 3;
+}
+
+message UpdateUserRequest {
+  string userId = 1;
+  optional string fullName = 2;
+  optional string email = 3;
+  optional string password = 4;
+  optional string phoneNumber = 5;
+  optional string profileImage = 6;
+  optional string organizationId = 7;
+}
+
+message DeleteUserRequest {
+  string userId = 1;
+}
+
+message DeleteUserResponse {
+  bool success = 1;
+  string message = 2;
+}
+
+message ListUsersRequest {
+  int32 page = 1;
+  int32 pageSize = 2;
+}
+
+message SearchUsersRequest {
+  string query = 1;
+  int32 page = 2;
+  int32 pageSize = 3;
+}
+
+message ListUsersResponse {
+  repeated UserInfo users = 1;
+  int32 total = 2;
+  int32 page = 3;
+  int32 totalPages = 4;
+}
+
+message UserInfo {
+  string userId = 1;
+  string email = 2;
+  string fullName = 3;
+  string createdAt = 4;
+  string updatedAt = 5;
+  string role= 6;
+  string company = 7;
+  string department = 8;
+  string jobRole = 9;
+  string phoneNumber = 10;
+  string profileImage = 11;
+  bool isFirstLogin = 12;
+  string githubAccessToken = 13;
+  string organizationId = 14;
+}
+
+message GetAllUsersRequest {
+  int32 page = 1;         // Page number (1-based)
+  int32 pageSize = 2;     // Number of items per page
+  optional string sortBy = 3;      // Field to sort by
+  optional string sortOrder = 4;   // Sort order ("asc" or "desc")
+
+  optional bool isEmailVerified = 5;  // Filter by email verification status
+  optional string role = 6;           // Filter by role (user/admin)
+  optional bool isActive = 7;         // Filter by active status
+
+  optional string search = 8;         // Search term for email and full name
+}
+
+
+message GetAllUsersResponse {
+  bool success = 1;                  // Operation status
+  string message = 2;                // Status message
+  repeated UserInfo users = 3;       // List of user objects
+  PaginationInfo pagination = 4;     // Pagination metadata
+  SortingInfo sorting = 5;           // Sorting metadata
+  SearchFilterInfo searchFilter = 6;
+}
+
+message PaginationInfo {
+  int32 currentPage = 1;             // Current page number
+  int32 totalPages = 2;              // Total number of pages
+  int32 totalItems = 3;              // Total number of users
+  int32 pageSize = 4;                // Number of items per page
+}
+
+// Sorting information
+message SortingInfo {
+  string sortBy = 1;    // Field being sorted by
+  string sortOrder = 2; // Sort order used
+}
+
+// Filter information
+message SearchFilterInfo {
+  string appliedFilters = 1; // Summary of applied filters
+  string searchTerm = 2;     // Search term used
+}
+
+message UpdateUserProfileDetailsRequest {
+  string userId = 1; // ID of the user whose profile is being updated
+  optional string company = 2;
+  optional string department = 3; // Send the selected or specified department here
+  optional string jobRole = 4;    // Send the selected or specified role here
+}
+
+
+// Organization Messages
+message OrganizationInfo {
+  string id = 1;
+  string title = 2;
+  string description = 3;
+  string ownerId = 4;
+  repeated string userIds = 5; // List of user IDs in the organization
+  string createdAt = 6;
+  string updatedAt = 7;
+  UserInfo owner = 8; // Include owner details
+}
+
+message CreateOrganizationRequest {
+  string title = 1;
+  string description = 2;
+  string requesterUserId = 3; // ID of the user making the request (owner)
+}
+
+message OrganizationResponse {
+    bool success = 1;
+    string message = 2;
+    OrganizationInfo organization = 3;
+}
+
+message GetOrganizationRequest {
+  string organizationId = 1;
+  string requesterUserId = 2; // ID of the user making the request (for potential access checks)
+}
+
+message UpdateOrganizationRequest {
+  string organizationId = 1;
+  optional string title = 2;
+  optional string description = 3;
+  string requesterUserId = 4; // ID of the user making the request (must be owner or admin)
+}
+
+message DeleteOrganizationRequest {
+  string organizationId = 1;
+  string requesterUserId = 2; // ID of the user making the request (must be owner or admin)
+}
+
+message DeleteOrganizationResponse {
+    bool success = 1;
+    string message = 2;
+}
+
+message AddUserToOrganizationRequest {
+  string organizationId = 1;
+  string userIdToAdd = 2;
+  string requesterUserId = 3; // ID of the user making the request (must be owner)
+}
+
+message RemoveUserFromOrganizationRequest {
+  string organizationId = 1;
+  string userIdToRemove = 2;
+  string requesterUserId = 3; // ID of the user making the request (must be owner)
+}
+
+message ListUserOrganizationsRequest {
+     string requesterUserId = 1; // ID of the user whose organizations to list
+     // Optional: Add pagination later if needed
+     // int32 page = 2;
+     // int32 pageSize = 3;
+}
+
+message ListOrganizationsResponse {
+     bool success = 1;
+     string message = 2;
+     repeated OrganizationInfo organizations = 3;
+     // Optional: Add pagination info later
+}
+
+// --- New Waitlist Messages ---
+message AddToWaitlistRequest {
+  string email = 1;
+}
+
+message AddToWaitlistResponse {
+  bool success = 1;
+  string message = 2;
+}
+
+message WaitlistEntry {
+  string id = 1;
+  string email = 2;
+  string joined_at = 3;
+  string status = 4;
+}
+
+message GetWaitlistRequest {
+  int32 page = 1;
+  int32 page_size = 2;
+  string status_filter = 3; // Optional filter by status
+}
+
+message GetWaitlistResponse {
+  repeated WaitlistEntry entries = 1;
+  int32 total = 2;
+  int32 page = 3;
+  int32 total_pages = 4;
+}
+
+message ApproveWaitlistUserRequest {
+  string id = 1;
+}
+
+message ApproveWaitlistUserResponse {
+  bool success = 1;
+  string message = 2;
+}
+
+message ApproveMultipleWaitlistUsersRequest {
+  repeated string ids = 1;
+}
+
+message ApproveMultipleWaitlistUsersResponse {
+  bool success = 1;
+  string message = 2;
+  int32 approved_count = 3;
+  repeated string failed_ids = 4;
+}
+
+// --- New Messages for Stripe Customer ID ---
+
+message UpdateStripeCustomerIdRequest {
+  string user_id = 1;           // ID of the user to update
+  string stripe_customer_id = 2; // The new Stripe Customer ID
+}
+
+message UpdateStripeCustomerIdResponse {
+  bool success = 1;
+  string message = 2;
+}
+
+message FetchStripeCustomerIdRequest {
+  string user_id = 1;
+}
+
+message FetchStripeCustomerIdResponse {
+  string stripe_customer_id = 1;
+}
+
+message UserDetails {
+    string id = 1;
+    string email = 2;
+    string full_name = 3;
+    string fcm_token = 4;
+}
+
+message ValidateUserRequest {
+    string id = 1;
+}
+
+message ValidateUserResponse {
+    bool success = 1;
+    string message = 2;
+    UserDetails user = 3;
+}
+
+message GetUsersByIdsRequest {
+    repeated string user_ids = 1;
+}
+
+message GetUsersByIdsResponse {
+    bool success = 1;
+    string message = 2;
+    repeated UserDetails users = 3;
+}
+
+message GetAPIKeyByIdRequest {
+    string api_key_id = 1;
+    string user_id = 2;
+}
+
+message GenerateAPIKeyRequest {
+  string user_id = 1;
+  string name = 2;
+  string project = 3; // Optional
+}
+
+message GenerateAPIKeyResponse {
+  bool success = 1;
+  string message = 2;
+  string public_key = 3;
+  string private_key = 4;
+}
+
+message ListAPIKeysRequest {
+  string user_id = 1;
+}
+
+message DeleteAPIKeyRequest {
+  string user_id = 1;
+  string key_id = 2;
+}
+
+message DeleteAPIKeyResponse {
+  bool success = 1;
+  string message = 2;
+}
+
+message APIKeyInfo {
+    string id = 1;
+    string name = 2;
+    string public_key = 3;
+    string private_key = 4;
+    string project = 5;
+    string created_at = 6;
+}
+
+message ListAPIKeysResponse {
+    bool success = 1;
+    string message = 2;
+    repeated APIKeyInfo api_keys = 3;
+}
+
+message GetAPIKeyByIdResponse {
+    bool success = 1;
+    string message = 2;
+    APIKeyInfo api_key = 3;
+}
+
+// Credential Management Messages
+
+message CreateCredentialRequest {
+  string key_name = 1;
+  string value = 2;
+  string owner_id = 3;
+  optional string description = 4;
+}
+
+message CreateCredentialResponse {
+  bool success = 1;
+  string message = 2;
+  string id = 3;
+  string key_name = 4;
+}
+
+message GetCredentialRequest {
+  string credential_id = 1;
+  string owner_id = 2;
+}
+
+message GetCredentialResponse {
+  bool success = 1;
+  string message = 2;
+  CredentialInfo credential = 3;
+}
+
+message ListCredentialsRequest {
+  string owner_id = 1;
+}
+
+message ListCredentialsResponse {
+  bool success = 1;
+  string message = 2;
+  repeated CredentialInfo credentials = 3;
+}
+
+message DeleteCredentialRequest {
+  string credential_id = 1;
+  string owner_id = 2;
+}
+
+message DeleteCredentialResponse {
+  bool success = 1;
+  string message = 2;
+}
+
+message CredentialInfo {
+  string id = 1;
+  string key_name = 2;
+  string value = 3;
+  string description = 4;
+  string created_at = 5;
+  string last_used_at = 6;
+  string updated_at = 7;
+}
+
+message UpdateCredentialRequest {
+  string credential_id = 1;
+  string owner_id = 2;
+  optional string key_name = 3;
+  optional string value = 4;
+  optional string description = 5;
+}
+
+message UpdateCredentialResponse {
+  bool success = 1;
+  string message = 2;
+  string id = 3;
+  string key_name = 4;
+}
+
+message UpdateUserGitToken {
+    string user_id = 1;
+    string github_access_token = 2;
+}
+
+message GetUserGitHubTokenRequest {
+    string user_id = 1;
+}
+
+message GetUserGitHubTokenResponse {
+    bool success = 1;
+    string message = 2;
+    string access_token = 3;
+}
+
+message PreferenceInfo {
+  string id = 1;
+  string user_id = 2;
+  string provider = 3;
+  string model = 4;
+  float temperature = 5;
+  int32 max_output_tokens = 6;
+  string created_at = 7;
+  string updated_at = 8;
+}
+
+message CreatePreferenceRequest {
+  string user_id = 1;
+  string provider = 2;
+  string model = 3;
+  float temperature = 4;
+  int32 max_output_tokens = 5;
+}
+
+message CreatePreferenceResponse {
+  bool success = 1;
+  string message = 2;
+  PreferenceInfo preference = 3;
+}
+
+message GetPreferenceRequest {
+  string user_id = 1;
+}
+
+message GetPreferenceResponse {
+  bool success = 1;
+  string message = 2;
+  PreferenceInfo preference = 3;
+}
+
+message UpdatePreferenceRequest {
+  string user_id = 1;
+  optional string provider = 2;
+  optional string model = 3;
+  optional float temperature = 4;
+  optional int32 max_output_tokens = 5;
+}
+
+message UpdatePreferenceResponse {
+  bool success = 1;
+  string message = 2;
+  PreferenceInfo preference = 3;
+}
+
+message ListPreferencesRequest {
+  string user_id = 1;
+  // Optional: Add pagination later if needed
+  // int32 page = 2;
+  // int32 pageSize = 3;
+}
+
+message ListPreferencesResponse {
+  bool success = 1;
+  string message = 2;
+  repeated PreferenceInfo preferences = 3;
+  // Optional: Add pagination info later
+}
+
+// Organisation Token Generation
+message GenerateOrganisationTokensRequest {
+  string organisation_id = 1;
+  string user_email = 2;
+}
+
+message GenerateOrganisationTokensResponse {
+  bool success = 1;
+  string message = 2;
+  string accessToken = 3;
+  string refreshToken = 4;
+}

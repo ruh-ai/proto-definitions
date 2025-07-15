@@ -1,0 +1,625 @@
+syntax = "proto3";
+
+import "google/protobuf/field_mask.proto";
+
+package workflow;
+
+service WorkflowService {
+    rpc createWorkflow (CreateWorkflowRequest) returns (CreateWorkflowResponse);
+    rpc getWorkflow (GetWorkflowRequest) returns (WorkflowResponse);
+    rpc updateWorkflow (UpdateWorkflowRequest) returns (UpdateWorkflowResponse);
+    rpc deleteWorkflow (DeleteWorkflowRequest) returns (DeleteWorkflowResponse);
+    rpc listWorkflows (ListWorkflowsRequest) returns (ListWorkflowsResponse);
+    rpc listWorkflowsByUserId (ListWorkflowsByUserIdRequest) returns (ListWorkflowsResponse);
+
+    // Add this to the WorkflowTemplateService
+    rpc createWorkflowFromTemplate(CreateWorkflowFromTemplateRequest) returns (CreateWorkflowFromTemplateResponse);
+    rpc getTemplate(GetTemplateRequest) returns (GetTemplateResponse);
+
+    rpc getWorkflowsByIds(GetWorkflowsByIdsRequest) returns (GetWorkflowsByIdsResponse);
+    rpc toggleWorkflowVisibility(ToggleWorkflowVisibilityRequest) returns (ToggleWorkflowVisibilityResponse);
+    rpc updateWorkflowSettings(UpdateWorkflowSettingsRequest) returns (UpdateWorkflowSettingsResponse);
+
+    rpc discoverComponents(DiscoverComponentsRequest) returns (DiscoverComponentsResponse);
+
+    rpc validateWorkflow(ValidateWorkflowRequest) returns (ValidateWorkflowResponse);
+
+    rpc getMarketplaceWorkflows(GetMarketplaceWorkflowsRequest) returns (GetMarketplaceWorkflowsResponse);
+    rpc getMarketplaceWorkflowDetail(GetMarketplaceWorkflowDetailRequest) returns (GetMarketplaceWorkflowDetailResponse);
+
+
+    // New endpoints for rating and using workflows
+    rpc rateWorkflow(RateWorkflowRequest) returns (RateWorkflowResponse);
+    rpc useWorkflow(UseWorkflowRequest) returns (UseWorkflowResponse);
+
+    // Version management endpoints
+    rpc listWorkflowVersions(ListWorkflowVersionsRequest) returns (ListWorkflowVersionsResponse);
+    rpc getWorkflowVersion(GetWorkflowVersionRequest) returns (GetWorkflowVersionResponse);
+    rpc switchWorkflowVersion(SwitchWorkflowVersionRequest) returns (SwitchWorkflowVersionResponse);
+
+    // Change tracking endpoints
+    rpc pullUpdatesFromSource(PullUpdatesFromSourceRequest) returns (PullUpdatesFromSourceResponse);
+    rpc checkForUpdates(CheckForUpdatesRequest) returns (CheckForUpdatesResponse);
+    
+    // New user-controlled versioning endpoint
+    rpc createVersionAndPublish(CreateVersionAndPublishRequest) returns (CreateVersionAndPublishResponse);
+
+}
+
+enum WorkflowOwnerType {
+    USER = 0;
+    ENTERPRISE = 1;
+    PLATFORM = 2;
+}
+
+enum WorkflowVisibility {
+    PRIVATE = 0;
+    PUBLIC = 1;
+}
+
+enum WorkflowStatus {
+    ACTIVE = 0;
+    INACTIVE = 1;
+    DRAFT = 2;
+}
+
+enum WorkflowCategory {
+    AUTOMATION = 0;
+    DATA_PIPELINE = 1;
+    INTEGRATION = 2;
+    WEB_SCRAPING = 3;
+    API = 4;
+    EMAIL = 5;
+    LLM_ORCHESTRATION = 6;
+    DATABASE = 7;
+    FILE_MANAGEMENT = 8;
+    SCHEDULING = 9;
+    MONITORING = 10;
+    CRM = 11;
+    NOTIFICATIONS = 12;
+    DOCUMENT_PROCESSING = 13;
+    DEVOPS = 14;
+    GENERAL = 15;
+}
+
+message Owner {
+    string id = 1;
+}
+
+message CreateWorkflowRequest {
+    string name = 1;
+    string description = 2;
+    string workflow_data = 3;
+    Owner owner = 4;
+    repeated string user_ids = 5;
+    WorkflowOwnerType owner_type = 6;
+    WorkflowVisibility visibility = 7;
+    WorkflowCategory category = 8;
+    repeated string tags = 9;
+    WorkflowStatus status = 10;
+    repeated string start_nodes = 11;
+}
+
+message UpdateWorkflowRequest {
+    string id = 1;
+    google.protobuf.FieldMask update_mask = 2;
+
+    string name = 3;
+    string description = 4;
+    string workflow_data = 5;
+    Owner owner = 6;
+    repeated string user_ids = 7;
+    WorkflowVisibility visibility = 8;
+    WorkflowCategory category = 9;
+    repeated string tags = 10;
+    WorkflowStatus status = 11;
+    repeated string start_nodes = 12;
+    string version = 13;
+    optional bool is_updated = 14;
+    optional bool is_customizable = 15;
+
+}
+
+message GetWorkflowRequest {
+    string id = 1;
+    optional string user_id = 2;
+}
+
+message DeleteWorkflowRequest {
+    string id = 1;
+    Owner owner = 2;
+}
+
+message ListWorkflowsRequest {
+    int32 page = 1;
+    int32 page_size = 2;
+    optional WorkflowCategory category = 3;
+    optional WorkflowStatus status = 4;
+    optional WorkflowVisibility visibility = 5;
+    string id = 6;
+    optional string search = 7;
+    repeated string tags = 8;
+    optional string user_id = 9;
+}
+
+message ListWorkflowsByUserIdRequest {
+    string owner_id = 1;
+    int32 page = 2;
+    int32 page_size = 3;
+    optional WorkflowCategory category = 4;
+    optional WorkflowStatus status = 5;
+    optional WorkflowVisibility visibility = 6;
+}
+
+message Workflow {
+    string id = 1;
+    string name = 2;
+    string description = 3;
+    string workflow_url = 4;
+    string builder_url = 5;
+    string owner_id = 6;
+    repeated string user_ids = 7;
+    string owner_type = 8;
+    optional string workflow_template_id = 9;
+    optional string template_owner_id = 10;
+    optional string url = 11;
+    bool is_imported = 12;
+    int32 execution_count = 13;
+    string version = 14;
+    string visibility = 15;
+    string category = 16;
+    repeated string tags = 17;
+    string status = 18;
+    string created_at = 19;
+    string updated_at = 20;
+    repeated string start_nodes = 21;
+    repeated string available_nodes = 22;
+    bool is_updated = 23;
+    bool is_customizable = 24;
+    optional string source_version_id = 25;
+}
+
+
+message CreateWorkflowResponse {
+    bool success = 1;
+    string message = 2;
+    Workflow workflow = 3;
+}
+
+message UpdateWorkflowResponse {
+    bool success = 1;
+    string message = 2;
+}
+
+message DeleteWorkflowResponse {
+    bool success = 1;
+    string message = 2;
+}
+
+message WorkflowResponse {
+    bool success = 1;
+    string message = 2;
+    optional Workflow workflow = 3;
+}
+
+message ListWorkflowsResponse {
+    bool success = 1;
+    repeated Workflow workflows = 2;
+    int32 total = 3;
+    int32 page = 4;
+    int32 total_pages = 5;
+}
+
+// template related messages
+
+message WorkflowTemplate {
+  string id = 1;
+  string name = 2;
+  string description = 3;
+  string workflow_url = 4;
+  string builder_url = 5;
+  int32 execution_count = 6;
+  string owner_id = 7;
+  string category = 8;
+  repeated string tags = 9;
+  string version = 10;
+  string status = 11;
+  string created_at = 12;
+  string updated_at = 13;
+  repeated string start_nodes = 14;
+  repeated string available_nodes = 15;
+  int32 use_count = 16;
+  float average_rating = 17;
+  string visibility = 18;
+  optional bool is_added = 19;
+  bool is_customizable = 20;
+  string source_workflow_id = 21;
+  optional bool has_updates = 22;
+  optional string current_version_id = 23;
+  optional string source_version_id = 24;
+}
+
+message GetTemplateRequest {
+  string id = 1;
+  optional string user_id = 2;
+}
+
+message GetTemplateResponse {
+  bool success = 1;
+  string message = 2;
+  WorkflowTemplate template = 3;
+}
+
+message CreateWorkflowFromTemplateRequest {
+  string template_id = 1;
+  Owner owner = 2;
+  WorkflowOwnerType owner_type = 3;
+}
+
+message CreateWorkflowFromTemplateResponse {
+  bool success = 1;
+  string message = 2;
+}
+
+message GetWorkflowsByIdsRequest {
+  repeated string ids = 1;
+}
+
+message GetWorkflowsByIdsResponse {
+  bool success = 1;
+  string message = 2;
+  repeated Workflow workflows = 3;
+  int32 total = 4;
+}
+
+message ToggleWorkflowVisibilityRequest {
+    string workflow_id = 1;
+    Owner owner = 2;
+}
+
+message ToggleWorkflowVisibilityResponse {
+    bool success = 1;
+    string message = 2;
+    Workflow workflow = 3;
+}
+
+message UpdateWorkflowSettingsRequest {
+    string workflow_id = 1;
+    Owner owner = 2;
+    optional bool is_updated = 3;
+    optional WorkflowStatus status = 4;
+}
+
+message UpdateWorkflowSettingsResponse {
+    bool success = 1;
+    string message = 2;
+}
+
+message ListTemplatesByUserIdRequest {
+  string owner_id = 1;
+  int32 page = 2;
+  int32 page_size = 3;
+  optional WorkflowCategory category = 4;
+}
+
+// Marketplace related messages
+
+enum MarketplaceItemSortEnum {
+  NEWEST = 0;
+  OLDEST = 1;
+  MOST_POPULAR = 2;
+  HIGHEST_RATED = 3;
+}
+
+message MarketplaceWorkflow {
+  string id = 1;
+  string name = 2;
+  string description = 3;
+  string image_url = 4;
+  string workflow_url = 5;  // Stores the workflow schema
+  string builder_url = 6;  // Stores the builder schema
+  repeated string start_nodes = 7;  // List of start node IDs
+  repeated string available_nodes = 8;  // List of available workflow nodes
+  string owner_id = 9;
+  int32 use_count = 10;  // Renamed from execution_count
+  int32 execution_count = 11;
+  float average_rating = 12;
+  string category = 13;
+  repeated string tags = 14;  // JSON string of key-value pairs (e.g., {"key1": "value1", "key2": "value2"})
+  string version = 15;
+  string status = 16;
+  string visibility = 17;
+  string created_at = 18;
+  string updated_at = 19;
+  string workflow_definition = 20;
+  bool is_customizable = 21;
+}
+
+message GetMarketplaceWorkflowsRequest {
+  int32 page = 1;
+  int32 page_size = 2;
+  optional string search = 3;  // Search term for name or description
+  optional WorkflowCategory category = 4;  // Category filter
+  repeated string tags = 5;  // JSON string of tag filters (e.g., {"key1": "value1", "key2": "value2"})
+  optional string sort_by = 6;  // Sort criteria (NEWEST, OLDEST, MOST_POPULAR, HIGHEST_RATED)
+  optional string visibility = 7;  // Default to PUBLIC for marketplace
+}
+
+message GetMarketplaceWorkflowsResponse {
+  bool success = 1;
+  string message = 2;
+  repeated MarketplaceWorkflow workflows = 3;
+  int32 total = 4;
+  int32 page = 5;
+  int32 page_size = 6;
+  int32 total_pages = 7;
+  bool has_next = 8;
+  bool has_prev = 9;
+  optional int32 next_page = 10;
+  optional int32 prev_page = 11;
+}
+
+message GetMarketplaceWorkflowDetailRequest {
+  string id = 1;
+}
+
+message GetMarketplaceWorkflowDetailResponse {
+  bool success = 1;
+  string message = 2;
+  MarketplaceWorkflow workflow = 3;
+}
+
+
+
+// Component discovery messages
+
+message DiscoverComponentsRequest {
+  bool force_refresh = 1;
+}
+
+message VisibilityRule {
+  string field_name = 1;
+  string field_value = 2;
+  string operator = 3;
+}
+
+message RequirementRule {
+  string field_name = 1;
+  string field_value = 2;
+  string operator = 3;
+}
+
+message ComponentInput {
+  string name = 1;
+  string display_name = 2;
+  string info = 3;
+  string input_type = 4;
+  repeated string input_types = 5;
+  bool required = 6;
+  bool is_handle = 7;
+  bool is_list = 8;
+  bool real_time_refresh = 9;
+  bool advanced = 10;
+  string value = 11;
+  repeated string options = 12;
+  repeated VisibilityRule visibility_rules = 13;
+  string visibility_logic = 14;
+  repeated RequirementRule requirement_rules = 15;
+  string requirement_logic = 16;
+  string credential_type = 17;
+  bool use_credential_id = 18;
+  string credential_id = 19;
+}
+
+message ComponentOutput {
+  string name = 1;
+  string display_name = 2;
+  string output_type = 3;
+  string semantic_type = 4;
+  string method = 5;
+}
+
+message MCPInfo {
+  string server_id = 1;
+  string server_path = 2;
+  string tool_name = 3;
+  string tool_id = 4;
+  string endpoint = 5;
+}
+
+message Component {
+  string id = 1;
+  string name = 2;
+  string display_name = 3;
+  string description = 4;
+  string category = 5;
+  string icon = 6;
+  string type = 7;
+  repeated ComponentInput inputs = 8;
+  repeated ComponentOutput outputs = 9;
+  bool is_valid = 10;
+  bool beta = 11;
+  bool requires_approval = 12;
+  string path = 13;
+  MCPInfo mcp_info = 14;
+}
+
+message DiscoverComponentsResponse {
+  repeated Component components = 1;
+}
+
+// Workflow validation messages
+
+message RequestNode {
+  string id = 1;
+  string type = 2;
+  map<string, string> data = 3;
+  double x = 4;
+  double y = 5;
+}
+
+message RequestEdge {
+  string id = 1;
+  string source = 2;
+  string target = 3;
+  string sourceHandle = 4;
+  string targetHandle = 5;
+}
+
+message ValidateWorkflowRequest {
+  repeated RequestNode nodes = 1;
+  repeated RequestEdge edges = 2;
+  string workflow_name = 3;
+  optional string workflow_id = 4;
+  optional string execution_id = 5;
+}
+
+message MissingField {
+  string node_id = 1;
+  string node_label = 2;
+  string input_name = 3;
+  string input_display_name = 4;
+  bool is_handle = 5;
+}
+
+message ValidateWorkflowResponse {
+  bool is_valid = 1;
+  repeated MissingField missing_fields = 2;
+  repeated string errors = 3;
+  repeated string warnings = 4;
+  optional string error = 5;
+}
+
+
+message RateWorkflowRequest {
+  string workflow_id = 1;
+  string user_id = 2;
+  float rating = 3;  // Rating value between 1.0 and 5.0
+}
+
+message RateWorkflowResponse {
+  bool success = 1;
+  string message = 2;
+  float average_rating = 3;  // Updated average rating after this rating is applied
+}
+
+message UseWorkflowRequest {
+  string workflow_id = 1;
+  string user_id = 2;
+}
+
+message UseWorkflowResponse {
+  bool success = 1;
+  string message = 2;
+  int32 use_count = 3;
+  string workflow_id = 4;
+}
+
+// Version management messages
+
+message WorkflowVersion {
+  string id = 1;
+  string workflow_id = 2;
+  string version_number = 3;
+  string name = 4;
+  string description = 5;
+  string workflow_url = 6;
+  string builder_url = 7;
+  repeated string start_nodes = 8;
+  repeated string available_nodes = 9;
+  string category = 10;
+  repeated string tags = 11;
+  string changelog = 12;
+  string status = 13;
+  bool is_customizable = 14;
+  string created_at = 15;
+  bool is_current = 16;
+}
+
+message ListWorkflowVersionsRequest {
+  string workflow_id = 1;
+  string user_id = 2;  // For permission checking
+  optional int32 page = 3;
+  optional int32 page_size = 4;
+}
+
+message ListWorkflowVersionsResponse {
+  bool success = 1;
+  string message = 2;
+  repeated WorkflowVersion versions = 3;
+  int32 total = 4;
+  int32 page = 5;
+  int32 total_pages = 6;
+  string current_version_id = 7;  // ID of the currently active version
+}
+
+message GetWorkflowVersionRequest {
+  string workflow_id = 1;
+  string version_id = 2;
+  string user_id = 3;  // For permission checking
+}
+
+message GetWorkflowVersionResponse {
+  bool success = 1;
+  string message = 2;
+  WorkflowVersion version = 3;
+}
+
+message SwitchWorkflowVersionRequest {
+  string workflow_id = 1;
+  string version_id = 2;
+  string user_id = 3;  // Must be the owner to switch versions
+}
+
+message SwitchWorkflowVersionResponse {
+  bool success = 1;
+  string message = 2;
+  WorkflowVersion new_current_version = 3;
+}
+
+message PullUpdatesFromSourceRequest {
+  optional string workflow_id = 1;        // ID of the cloned workflow to update (optional)
+  string user_id = 2;                     // User making the request (must be owner)
+  optional string source_workflow_id = 3; // ID of the source workflow (optional)
+}
+
+message PullUpdatesFromSourceResponse {
+  bool success = 1;
+  string message = 2;
+  Workflow updated_workflow = 3;  // The updated workflow
+}
+
+message CheckForUpdatesRequest {
+  string workflow_id = 1;  // ID of the cloned workflow to check
+  string user_id = 2;      // User making the request (must be owner)
+}
+
+message CheckForUpdatesResponse {
+  bool success = 1;
+  string message = 2;
+  bool has_updates = 3;                    // Whether updates are available
+  optional string source_workflow_id = 4;  // ID of the source workflow
+  optional string last_updated = 5;        // Last update timestamp
+  optional string source_last_updated = 6; // Source workflow last update timestamp
+  optional string current_source_version_id = 7;  // Enhanced version sync: current version ID of source workflow
+  optional string user_source_version_id = 8;     // Enhanced version sync: version ID user's workflow was cloned from
+  optional string current_source_version_number = 9;  // Enhanced version sync: current version number of source workflow
+  optional string user_source_version_number = 10;    // Enhanced version sync: version number user's workflow was cloned from
+}
+
+
+message CreateVersionAndPublishRequest {
+  string workflow_id = 1;  // ID of the workflow to create version for
+  string user_id = 2;      // User making the request (must be owner)
+  bool publish_to_marketplace = 3;  // Whether to update marketplace listing with new version
+}
+
+message CreateVersionAndPublishResponse {
+  bool success = 1;
+  string message = 2;
+  bool version_created = 3;  // Whether a new version was created
+  bool marketplace_updated = 4;  // Whether marketplace listing was updated
+  optional string version_number = 5;  // Version number of the created version
+  optional string version_id = 6;  // ID of the created version
+  optional string marketplace_listing_id = 7;  // ID of the updated marketplace listing
+}

@@ -1,0 +1,286 @@
+syntax = "proto3";
+
+package google_drive;
+
+// Google Drive integration service
+service GoogleDriveService {
+  // Disconnect Google Drive account
+  rpc disconnectDrive(DisconnectDriveRequest) returns (DisconnectDriveResponse) {}
+  
+  // Sync Google Drive files and folders using service account
+  rpc syncDrive(SyncDriveRequest) returns (SyncDriveResponse) {}
+  
+  // List Google Drive files and folders
+  rpc listFiles(ListFilesRequest) returns (ListFilesResponse) {}
+  
+  // Get file details
+  rpc getFileDetails(GetFileDetailsRequest) returns (GetFileDetailsResponse) {}
+  
+  // Get folder by ID and its contents
+  rpc getFolderById(GetFolderByIdRequest) returns (GetFolderByIdResponse) {}
+  
+  // Sync folders by IDs
+  rpc syncFolderByIds(SyncFolderByIdsRequest) returns (SyncFolderByIdsResponse) {}
+  
+  // Check if a user has access to a file
+  rpc checkFileAccess(CheckFileAccessRequest) returns (CheckFileAccessResponse) {}
+  
+  // Search for documents semantically similar to a query
+  rpc searchSimilarDocuments(SearchSimilarDocumentsRequest) returns (SearchSimilarDocumentsResponse) {}
+  
+  // Batch search for documents semantically similar to multiple queries
+  rpc batchSearchSimilarDocuments(BatchSearchSimilarDocumentsRequest) returns (BatchSearchSimilarDocumentsResponse) {}
+  
+  // Sync a specific Google Drive file by URL
+  rpc syncFileByUrl(SyncFileByUrlRequest) returns (SyncFileByUrlResponse) {}
+  
+  // List top-level folders using service account
+  rpc listTopLevelFolders(ListTopLevelFoldersRequest) returns (ListTopLevelFoldersResponse) {}
+}
+
+// Simple folder info model
+message FolderInfo {
+  string id = 1;
+  string name = 2;
+}
+
+// Request to disconnect Google Drive
+message DisconnectDriveRequest {
+  string organisation_id = 1;
+}
+
+// Response for disconnect operation
+message DisconnectDriveResponse {
+  bool success = 1;
+  string message = 2;
+}
+
+// Request to sync Google Drive
+message SyncDriveRequest {
+  string user_id = 1;
+  string organisation_id = 2;  // Added organization ID
+  bool full_sync = 3;  // Whether to perform a full sync or incremental
+}
+
+// Response for sync operation
+message SyncDriveResponse {
+  bool success = 1;
+  string message = 2;
+  int32 files_synced = 3;
+  int32 folders_synced = 4;
+  string sync_status = 5;  // "completed", "in_progress", or "failed"
+}
+
+// Request to list files
+message ListFilesRequest {
+  string user_id = 1;
+  string folder_id = 2;  // Optional, to list files in a specific folder
+  int32 page = 3;
+  int32 page_size = 4;
+}
+
+// Google Drive file model
+message DriveFileModel {
+  string id = 1;
+  string name = 2;
+  string mime_type = 3;
+  string web_view_link = 4;
+  string created_time = 5;
+  string modified_time = 6;
+  string parent_folder_id = 7;
+  int64 size = 8;
+  repeated string shared_with = 9;  // List of user emails with access
+  bool is_folder = 10;
+  int32 child_count = 11;  // Number of children (for folders)
+}
+
+// Response for list files operation
+message ListFilesResponse {
+  bool success = 1;
+  string message = 2;
+  repeated DriveFileModel files = 3;
+  int32 total_count = 4;
+  int32 page = 5;
+  int32 page_size = 6;
+}
+
+// Request to get file details
+message GetFileDetailsRequest {
+  string user_id = 1;
+  string file_id = 2;
+}
+
+// Response for get file details operation
+message GetFileDetailsResponse {
+  bool success = 1;
+  string message = 2;
+  DriveFileModel file = 3;
+}
+
+// Request to get folder by ID
+message GetFolderByIdRequest {
+  string organisation_id = 1;  // Organisation ID for service account
+  string folder_id = 2;
+}
+
+// Response for get folder by ID operation
+message GetFolderByIdResponse {
+  bool success = 1;
+  string message = 2;
+  DriveFileModel folder = 3;
+  repeated DriveFileModel children = 4;
+}
+
+// Request to sync specific folders by IDs
+message SyncFolderByIdsRequest {
+  string organisation_id = 1;  // Organisation ID for service account
+  repeated string folder_ids = 2;  // List of folder IDs to sync
+}
+
+// Response for sync folders by IDs operation
+message SyncFolderByIdsResponse {
+  bool success = 1;
+  string message = 2;
+  int32 files_synced = 3;
+  int32 folders_synced = 4;
+  string sync_status = 5;
+  repeated FolderInfo synced_folders = 6;  // List of synced folders
+}
+
+// New message definitions for file access checking
+message CheckFileAccessRequest {
+  string user_id = 1;
+  string file_id = 2;
+}
+
+message CheckFileAccessResponse {
+  bool success = 1;
+  string message = 2;
+  bool has_access = 3;
+}
+
+// Request to search for semantically similar documents
+message SearchSimilarDocumentsRequest {
+  string user_id = 1;
+  string query_text = 2;
+  int32 top_k = 3;  // Number of results to return
+  string agent_id = 4;  // Optional agent ID to filter results by department access
+  string organisation_id = 5;  // Organization ID (mandatory for production use)
+  repeated string file_ids = 6;  // Optional list of specific file IDs to search within
+  float least_score = 7;  // Optional minimum score threshold for results
+}
+
+// Entity information from knowledge graph
+message EntityInfo {
+  string id = 1;
+  string name = 2;
+  string type = 3;
+  map<string, string> properties = 4;  // Additional entity properties
+  float relevance_score = 5;  // Relevance score for this entity
+}
+
+// Relationship information from knowledge graph
+message RelationshipInfo {
+  string id = 1;
+  string type = 2;
+  string source_entity_id = 3;
+  string target_entity_id = 4;
+  string source_entity_name = 5;  // Name of source entity
+  string target_entity_name = 6;  // Name of target entity
+  map<string, string> properties = 7;  // Additional relationship properties
+  float confidence_score = 8;  // Confidence score for this relationship
+  float relevance_score = 9;  // Relevance score for this relationship
+  string context = 10;  // Context information about the relationship
+}
+
+// Graph context containing all knowledge graph discoveries
+message GraphContext {
+  // All entities discovered (chunk-based + graph-discovered)
+  repeated EntityInfo all_entities = 1;
+  repeated RelationshipInfo all_relationships = 2;
+}
+
+// Search result item (entities and relationships moved to GraphContext)
+message SearchResultItem {
+  string file_id = 1;
+  string file_name = 2;
+  string mime_type = 3;
+  string web_view_link = 4;
+  string created_time = 5;
+  string modified_time = 6;
+  float score = 7;  // Similarity score
+  string vector_id = 8;  // ID of the vector in Pinecone
+  string chunk_text = 9;  // The actual text content of the matched chunk
+  string search_type = 10;  // Type of search performed (e.g., "hybrid", "semantic", "graph")
+}
+
+// Response for semantic search operation
+message SearchSimilarDocumentsResponse {
+  bool success = 1;
+  string message = 2;
+  repeated SearchResultItem results = 3;
+  GraphContext graph_context = 4;  // Separate graph context with all discoveries
+}
+
+// Request to batch search for semantically similar documents
+message BatchSearchSimilarDocumentsRequest {
+  string user_id = 1;
+  repeated string query_texts = 2;
+  int32 top_k = 3;  // Number of results to return per query
+  string agent_id = 4;  // Optional agent ID to filter results by department access
+  string organisation_id = 5;  // Organization ID (mandatory for production use)
+  repeated string file_ids = 6;  // Optional list of specific file IDs to search within
+  float least_score = 7;  // Optional minimum score threshold for results
+}
+
+// Response for batch semantic search operation
+message BatchSearchSimilarDocumentsResponse {
+  bool success = 1;
+  string message = 2;
+  repeated QueryResults query_results = 3;
+}
+
+// Results for a single query in a batch
+message QueryResults {
+  string query_text = 1;  // The original query text
+  repeated SearchResultItem results = 2;  // Search results for this query
+}
+
+// Request to sync a specific Google Drive file by URL
+message SyncFileByUrlRequest {
+  repeated string drive_url = 1;       // Google Drive URLs
+  string agent_id = 2;        // Agent ID
+  string user_id = 3;         // Optional user ID
+  string organisation_id = 4;  // Organisation ID
+}
+
+// Information about a synced file
+message SyncedFileInfo {
+  string file_id = 1;         // The ID of the synced file
+  string file_name = 2;       // The name of the synced file
+  string drive_url = 3;       // The original URL that was synced
+  string sync_status = 4;     // "completed" or "failed"
+  string error_message = 5;   // Error message if sync failed
+}
+
+// Response for sync file by URL operation
+message SyncFileByUrlResponse {
+  bool success = 1;
+  string message = 2;
+  repeated SyncedFileInfo synced_files = 3;  // Information about all synced files
+  int32 total_files = 4;      // Total number of URLs processed
+  int32 successful_syncs = 5; // Number of successful syncs
+  int32 failed_syncs = 6;     // Number of failed syncs
+}
+
+// Request to list top-level folders using service account
+message ListTopLevelFoldersRequest {
+  string organisation_id = 1;  // Organisation ID for service account
+}
+
+// Response for list top-level folders operation
+message ListTopLevelFoldersResponse {
+  bool success = 1;
+  string message = 2;
+  repeated FolderInfo folders = 3;  // List of top-level folders
+}

@@ -1,0 +1,806 @@
+syntax = "proto3";
+
+package agent;
+import "google/protobuf/field_mask.proto";
+
+service AgentService {
+  rpc createAgent (CreateAgentRequest) returns (CreateAgentResponse);
+  rpc getAgent (GetAgentRequest) returns (AgentResponse);
+  rpc deleteAgent (DeleteAgentRequest) returns (DeleteAgentResponse);
+  rpc listAgents (ListAgentsRequest) returns (ListAgentsResponse);
+  rpc getAgentsByIds (GetAgentsByIdsRequest) returns (GetAgentsByIdsResponse);
+
+  rpc createAgentFromTemplate(CreateAgentFromTemplateRequest) returns (CreateAgentFromTemplateResponse);
+
+
+  // New Granular Update RPCs
+  rpc UpdateAgentCoreDetails(UpdateAgentCoreDetailsRequest) returns (UpdateAgentPartResponse);
+  rpc UpdateAgentKnowledge(UpdateAgentKnowledgeRequest) returns (UpdateAgentPartResponse);
+  rpc UpdateAgentMcpServers(UpdateAgentMcpServersRequest) returns (UpdateAgentPartResponse);
+  rpc UpdateAgentWorkflows(UpdateAgentWorkflowsRequest) returns (UpdateAgentPartResponse);
+  rpc UpdateAgentSettings(UpdateAgentSettingsRequest) returns (UpdateAgentPartResponse);
+  rpc UpdateAgentCapabilities(UpdateAgentCapabilitiesRequest) returns (UpdateAgentPartResponse);
+  rpc UpdateAgentCombined(UpdateAgentCombinedRequest) returns (UpdateAgentPartResponse);
+
+  // Visibility Toggle
+  rpc ToggleAgentVisibility(ToggleAgentVisibilityRequest) returns (ToggleAgentVisibilityResponse);
+
+  rpc getTemplate(GetTemplateRequest) returns (GetTemplateResponse);
+  rpc listTemplates(ListTemplatesRequest) returns (ListTemplatesResponse);
+
+  rpc getMarketplaceAgents(GetMarketplaceAgentsRequest) returns (GetMarketplaceAgentsResponse);
+  rpc getMarketplaceAgentDetail(GetMarketplaceAgentDetailRequest) returns (GetMarketplaceAgentDetailResponse);
+
+  // Rating and usage tracking RPCs
+  rpc rateAgent(RateAgentRequest) returns (RateAgentResponse);
+  rpc useAgent(UseAgentRequest) returns (UseAgentResponse);
+
+
+   // Agent Avatar RPCs
+  rpc createAgentAvatar(CreateAgentAvatarRequest) returns (CreateAgentAvatarResponse);
+  rpc getAgentAvatar(GetAgentAvatarRequest) returns (GetAgentAvatarResponse);
+  rpc listAgentAvatars(ListAgentAvatarsRequest) returns (ListAgentAvatarsResponse);
+  rpc deleteAgentAvatar(DeleteAgentAvatarRequest) returns (DeleteAgentAvatarResponse);
+
+  rpc UpdateAgentVariables(UpdateAgentVariablesRequest) returns (UpdateAgentPartResponse);
+
+  // Agent Version Management RPCs
+  rpc listAgentVersions(ListAgentVersionsRequest) returns (ListAgentVersionsResponse);
+  rpc getAgentVersion(GetAgentVersionRequest) returns (GetAgentVersionResponse);
+  rpc switchAgentVersion(SwitchAgentVersionRequest) returns (SwitchAgentVersionResponse);
+  rpc createVersionAndPublish(CreateVersionAndPublishRequest) returns (CreateVersionAndPublishResponse);
+}
+
+enum AgentCategory {
+    USER_PROXY = 0;
+    ASSISTANT = 1;
+    AI_AGENT = 2;
+}
+
+enum Category {
+    ENGINEERING = 0;
+    MARKETING = 1;
+    SALES = 2;
+    CUSTOMER_SUPPORT = 3;
+    HUMAN_RESOURCES = 4;
+    FINANCE = 5;
+    OPERATIONS = 6;
+    GENERAL = 7;
+}
+
+enum Visibility {
+    PRIVATE = 0;
+    PUBLIC = 1;
+}
+
+enum Status {
+    ACTIVE = 0;
+    INACTIVE = 1;
+    DRAFT = 2;
+}
+
+enum OwnerType {
+    USER = 0;
+    ENTERPRISE = 1;
+    PLATFORM = 2;
+}
+
+enum Tone {
+    PROFESSIONAL = 0;
+    FRIENDLY = 1;
+    CASUAL = 2;
+    FORMAL = 3;
+    ENTHUSIASTIC = 4;
+}
+
+message Owner {
+    string id = 1;
+    string email = 2;
+    string full_name = 3;
+    string fcm_token = 4;
+}
+
+message AgentCapabilitiesData {
+    string capabilities_json = 1;
+    repeated string input_modes = 2;
+    repeated string output_modes = 3;
+    repeated string response_model = 4;
+}
+
+
+message AgentVariableData {
+  string name = 1;
+  optional string description = 2;
+  string type = 3;
+  optional string default_value = 4;
+  optional string id = 5;
+  string created_at = 6;
+  string updated_at = 7;
+}
+
+
+message CreateAgentRequest {
+    string name = 1;
+    string description = 2;
+    string avatar = 3;
+    Owner owner = 4;
+    repeated string user_ids = 5;
+    OwnerType owner_type = 6;
+    string system_message = 7;
+    string model_provider = 8;
+    string model_name = 9;
+    float temperature = 10;
+    repeated string workflow_ids = 11;
+    repeated string mcp_server_ids = 12;
+    string agent_topic_type = 13;
+    string subscriptions = 14;
+    Visibility visibility = 15;
+    repeated string tags = 16;
+    Status status = 17;
+    string department = 18;
+    Tone tone = 19;
+    repeated string files = 20;
+    repeated string urls = 21;
+    string organization_id = 22;
+    bool is_a2a = 23;
+    bool is_customizable = 24;
+    AgentCapabilitiesData agent_capabilities = 25;
+    repeated string example_prompts = 26;
+    Category category = 27;
+    repeated AgentVariableData variables = 28;
+    int32 max_tokens = 29;
+}
+
+
+message CreateAgentResponse {
+  bool success = 1;
+  string message = 2;
+  Agent agent = 3;
+}
+
+message GetAgentRequest {
+  string id = 1;
+}
+
+
+
+message DeleteAgentRequest {
+  string id = 1;
+  Owner owner = 2;
+}
+
+message DeleteAgentResponse {
+  bool success = 1;
+  string message = 2;
+}
+
+message ListAgentsRequest {
+  int32 page = 1;
+  int32 page_size = 2;
+  optional string department = 3;
+  optional Status status = 4;
+  optional Visibility visibility = 5;
+  optional string owner_id = 6;
+  optional string organization_id = 7;
+  optional bool is_bench_employee = 8;
+  optional bool is_a2a = 9;
+  optional bool is_customizable = 10;
+  optional Category category = 11;
+  optional string search = 12;
+}
+
+message ListAgentsByUserIdRequest {
+  string owner_id = 1;
+  int32 page = 2;
+  int32 page_size = 3;
+  optional string department = 4;
+  optional Status status = 5;
+  optional Visibility visibility = 6;
+  optional bool is_bench_employee = 7;
+}
+
+message AgentCapabilities {
+    string id = 1;
+    string capabilities = 2;
+    repeated string input_modes = 3;
+    repeated string output_modes = 4;
+    repeated string response_model = 5;
+    string created_at = 6;
+    string updated_at = 7;
+}
+
+message Agent {
+    string id = 1;
+    string name = 2;
+    string description = 3;
+    string avatar = 4;
+    string owner_id = 5;
+    repeated string user_ids = 6;
+    string owner_type = 7;
+    optional string template_id = 8;
+    string template_owner_id = 9;
+    bool is_bench_employee = 10;
+    optional bool is_imported = 11;
+    string agent_category = 12;
+    string system_message = 13;
+    string model_provider = 14;
+    string model_name = 15;
+    float temperature = 16;
+    repeated string workflow_ids = 17;
+    repeated string mcp_server_ids = 18;
+    optional string agent_topic_type = 19;
+    optional string subscriptions = 20;
+    string visibility = 21;
+    repeated string tags = 22;
+    string status = 23;
+    string created_at = 24;
+    string updated_at = 25;
+    string department = 26;
+    string tone = 27;
+    repeated FileEntry files = 28;
+    repeated UrlEntry urls = 29;
+    bool is_changes_marketplace = 30;
+    string organization_id = 31;
+    bool is_a2a = 32;
+    bool is_customizable = 33;
+    string capabilities_id = 34;
+    optional AgentCapabilities agent_capabilities = 35;
+    repeated string example_prompts = 36;
+    string category = 37;
+    repeated AgentVariableData variables = 38;
+    bool is_updated = 39;
+    int32 max_tokens = 40;
+    optional ModelData model_data = 41;
+}
+
+message AgentResponse {
+  bool success = 1;
+  string message = 2;
+  Agent agent = 3;
+}
+
+message ListAgentsResponse {
+  bool success = 1;
+  repeated Agent agents = 2;
+  int32 total = 3;
+  int32 page = 4;
+  int32 total_pages = 5;
+}
+
+message CreateAgentFromTemplateRequest {
+    string template_id = 1;
+    Owner owner = 2;
+    OwnerType owner_type = 3;
+}
+
+message CreateAgentFromTemplateResponse {
+    bool success = 1;
+    string message = 2;
+}
+
+
+// Template related messages
+
+message Template {
+  string id = 1;
+  string name = 2;
+  string description = 3;
+  string avatar = 4;
+  string agent_category = 5;
+  string system_message = 6;
+  string model_provider = 7;
+  string model_name = 8;
+  float temperature = 9;
+  repeated string workflow_ids = 10;
+  repeated string mcp_server_ids = 11;
+  string agent_topic_type = 12;
+  string subscriptions = 13;
+  string department = 14;
+  repeated string tags  = 15;
+  string created_at = 16;
+  string updated_at = 17;
+  string tone = 18;
+  repeated FileEntry files = 19;
+  repeated UrlEntry urls = 20;
+  string owner_id = 21;
+  int32 use_count = 22;
+  string organization_id = 23;
+  bool is_a2a = 24;
+  bool is_customizable = 25;
+  string capabilities_id = 26;
+  repeated string example_prompts = 27;
+  optional AgentCapabilities agent_capabilities = 28;
+  optional bool is_added = 29;
+  string category =  30;
+  int32 max_tokens = 31;
+}
+
+
+message GetTemplateRequest {
+  string id = 1;
+  optional string user_id = 2;
+}
+
+message GetTemplateResponse {
+  bool success = 1;
+  string message = 2;
+  Template template = 3;
+}
+
+message DeleteTemplateRequest {
+  string id = 1;
+}
+
+message DeleteTemplateResponse {
+  bool success = 1;
+  string message = 2;
+}
+
+message ListTemplatesRequest {
+  int32 page = 1;
+  int32 page_size = 2;
+  optional string department = 3;
+  optional string owner_id = 4;
+  optional string organization_id = 5;
+}
+
+message ListTemplatesResponse {
+  repeated Template templates = 1;
+  int32 total = 2;
+  int32 page = 3;
+  int32 total_pages = 4;
+}
+
+message ListTemplatesByUserIdRequest {
+  string owner_id = 1;
+  int32 page = 2;
+  int32 page_size = 3;
+}
+
+
+// --- Generic Update Response ---
+message UpdateAgentPartResponse {
+    bool success = 1;
+    string message = 2;
+    Agent agent = 3;
+}
+
+
+// --- RPCs for Specific Updates ---
+
+message UpdateAgentCoreDetailsRequest {
+    string agent_id = 1;
+    Owner owner = 2;
+    google.protobuf.FieldMask update_mask = 3;
+
+    string name = 4;
+    string description = 5;
+    string avatar = 6;
+    string system_message = 7;
+    string model_provider = 8;
+    string model_name = 9;
+    float temperature = 10;
+    string department = 11;
+    Tone tone = 12;
+    string agent_topic_type = 13;
+    Category category = 14;
+    int32 max_tokens = 15;
+}
+
+message UpdateAgentKnowledgeRequest {
+    string agent_id = 1;
+    Owner owner = 2;
+    google.protobuf.FieldMask update_mask = 3;
+    repeated string files = 4;
+    repeated string urls = 5;
+}
+
+message UpdateAgentMcpServersRequest {
+    string agent_id = 1;
+    Owner owner = 2;
+    repeated string mcp_server_ids = 3;
+}
+
+message UpdateAgentWorkflowsRequest {
+    string agent_id = 1;
+    Owner owner = 2;
+    repeated string workflow_ids = 3;
+}
+
+message ToggleAgentVisibilityRequest {
+    string agent_id = 1;
+    Owner owner = 2;
+}
+message ToggleAgentVisibilityResponse {
+    bool success = 1;
+    string message = 2;
+    Agent agent = 3;
+}
+
+message UpdateAgentSettingsRequest {
+    string agent_id = 1;
+    Owner owner = 2;
+    google.protobuf.FieldMask update_mask = 3;
+
+    repeated string user_ids = 4;
+    string agent_topic_type = 5;
+    string subscriptions = 6;
+    repeated string tags  = 7;
+    Status status = 8;
+    bool is_changes_marketplace = 9;
+    bool is_bench_employee = 10;
+    bool is_a2a = 11;
+    bool is_customizable = 12;
+    repeated string example_prompts = 13;
+}
+
+message UpdateAgentCapabilitiesRequest {
+    string agent_id = 1;
+    Owner owner = 2;
+    string capabilities = 3;
+    repeated string input_modes = 4;
+    repeated string output_modes = 5;
+    repeated string response_model = 6;
+    google.protobuf.FieldMask update_mask = 7;
+}
+
+message UpdateAgentCombinedRequest {
+    string agent_id = 1;
+    Owner owner = 2;
+    google.protobuf.FieldMask update_mask = 3;
+
+    // Core Details
+    optional string model_provider = 4;
+    optional string model_name = 5;
+    optional float temperature = 6;
+    optional int32 max_tokens = 7;
+
+    // Variables
+    repeated AgentVariableData variables = 8;
+
+    // Capabilities
+    optional string capabilities = 9;
+    repeated string input_modes = 10;
+    repeated string output_modes = 11;
+    repeated string response_model = 12;
+}
+
+
+// Marketplace related messages
+
+enum MarketplaceItemSortEnum {
+  NEWEST = 0;
+  OLDEST = 1;
+  MOST_POPULAR = 2;
+  HIGHEST_RATED = 3;
+}
+
+message MarketplaceAgent {
+  string id = 1;
+  string name = 2;
+  string description = 3;
+  string avatar = 4;
+  string agent_category = 5;
+  string system_message = 6;
+  string model_provider = 7;
+  string model_name = 8;
+  float temperature = 9;
+  repeated string workflow_ids = 10;
+  repeated string mcp_server_ids = 11;
+  string agent_topic_type = 12;
+  string subscriptions = 13;
+  string department = 14;
+  string tone = 15;
+  repeated FileEntry files = 16;
+  repeated UrlEntry urls = 17;
+  string owner_id = 18;
+  int32 use_count = 19;
+  repeated string tags = 20;
+  string status = 21;
+  string created_at = 22;
+  string updated_at = 23;
+  string visibility = 24;
+  float average_rating = 25;
+  bool is_a2a = 26;
+  bool is_customizable = 27;
+  string capabilities_id = 28;
+  repeated string example_prompts = 29;
+  optional AgentCapabilities agent_capabilities = 30;
+  optional bool is_added = 31;
+  string category = 32;
+  string source_agent_id = 33;
+  string version = 34;
+  int32 max_tokens = 35;
+}
+
+message GetMarketplaceAgentsRequest {
+  int32 page = 1;
+  int32 page_size = 2;
+  optional string search = 3;  // Search term for name or description
+  optional string department = 4;  // Department filter
+  optional Category category = 5;  // Category filter
+  repeated string tags = 6; 
+  optional string sort_by = 7;  // Sort criteria (NEWEST, OLDEST, MOST_POPULAR, HIGHEST_RATED)
+  string visibility = 8;
+}
+
+message GetMarketplaceAgentsResponse {
+  bool success = 1;
+  string message = 2;
+  repeated MarketplaceAgent agents = 3;
+  int32 total = 4;
+  int32 page = 5;
+  int32 page_size = 6;
+  int32 total_pages = 7;
+  bool has_next = 8;
+  bool has_prev = 9;
+  optional int32 next_page = 10;
+  optional int32 prev_page = 11;
+}
+
+message GetMarketplaceAgentDetailRequest {
+  string id = 1;
+  optional string user_id = 2;
+}
+
+message GetMarketplaceAgentDetailResponse {
+  bool success = 1;
+  string message = 2;
+  MarketplaceAgent agent = 3;
+}
+
+
+// Rating and usage tracking messages
+message RateAgentRequest {
+  string agent_id = 1;
+  string user_id = 2;
+  float rating = 3;  // Rating value between 1.0 and 5.0
+}
+
+message RateAgentResponse {
+  bool success = 1;
+  string message = 2;
+  float average_rating = 3;  // Updated average rating after this rating is applied
+}
+
+message UseAgentRequest {
+  string agent_id = 1;
+  string user_id = 2;
+  repeated string workflow_ids = 3;
+  repeated string mcp_ids = 4;
+}
+
+message UseAgentResponse {
+  bool success = 1;
+  string message = 2;
+  int32 use_count = 3;
+}
+
+
+// Add these message definitions to your agent.proto file
+
+// Agent Avatar message
+message AgentAvatar {
+  string id = 1;
+  string url = 2;
+  string created_at = 3;
+  string updated_at = 4;
+}
+
+// Create Agent Avatar Request
+message CreateAgentAvatarRequest {
+  string url = 1;
+  Owner owner = 2;  // Using the existing Owner message
+}
+
+// Create Agent Avatar Response
+message CreateAgentAvatarResponse {
+  bool success = 1;
+  string message = 2;
+  AgentAvatar avatar = 3;
+}
+
+// Get Agent Avatar Request
+message GetAgentAvatarRequest {
+  string id = 1;
+}
+
+// Get Agent Avatar Response
+message GetAgentAvatarResponse {
+  bool success = 1;
+  string message = 2;
+  AgentAvatar avatar = 3;
+}
+
+// List Agent Avatars Request
+message ListAgentAvatarsRequest {
+  int32 page = 1;
+  int32 page_size = 2;
+}
+
+// List Agent Avatars Response
+message ListAgentAvatarsResponse {
+  bool success = 1;
+  string message = 2;
+  repeated AgentAvatar avatars = 3;
+  int32 total = 4;
+  int32 page = 5;
+  int32 total_pages = 6;
+}
+
+// Delete Agent Avatar Request
+message DeleteAgentAvatarRequest {
+  string id = 1;
+  Owner owner = 2;  // Using the existing Owner message
+}
+
+// Delete Agent Avatar Response
+message DeleteAgentAvatarResponse {
+  bool success = 1;
+  string message = 2;
+}
+
+
+message UpdateAgentVariablesRequest {
+    string agent_id = 1;
+    Owner owner = 2;
+    repeated AgentVariableData variables = 3;
+}
+
+// Agent Version Management Messages
+
+message AgentModelConfig {
+    string id = 1;
+    string model_provider = 2;
+    string model_name = 3;
+    float temperature = 4;
+    int32 max_tokens = 5;
+    string created_at = 6;
+    string updated_at = 7;
+}
+
+message ModelData {
+    string model_id = 1;
+    int32 context_window = 2;
+    string model_provider = 3;
+    string model_name = 4;
+    float temperature = 5;
+    int32 max_tokens = 6;
+}
+
+message AgentKnowledgeBase {
+    string id = 1;
+    repeated FileEntry files = 2;
+    repeated UrlEntry urls = 3;
+    string created_at = 4;
+    string updated_at = 5;
+}
+
+message AgentVersion {
+    string id = 1;
+    string agent_config_id = 2;
+    string version_number = 3;
+    string name = 4;
+    string description = 5;
+    string avatar = 6;
+    string agent_category = 7;
+    string system_message = 8;
+    repeated string workflow_ids = 9;
+    repeated string mcp_server_ids = 10;
+    string agent_topic_type = 11;
+    string subscriptions = 12;
+    string department = 13;
+    string organization_id = 14;
+    string tone = 15;
+    bool is_bench_employee = 16;
+    bool is_changes_marketplace = 17;
+    bool is_a2a = 18;
+    bool is_customizable = 19;
+    string capabilities_id = 20;
+    repeated string example_prompts = 21;
+    string category = 22;
+    repeated string tags = 23;
+    string status = 24;
+    string version_notes = 25;
+    bool is_current = 26;
+    string created_at = 27;
+    string updated_at = 28;
+    optional AgentModelConfig model_config = 29;
+    optional AgentKnowledgeBase knowledge_base = 30;
+}
+
+
+message MarketplaceListing {
+    string id = 1;
+    string agent_version_id = 2;
+    string title = 3;
+    string description = 4;
+    repeated string tags = 5;
+    string category = 6;
+    bool is_featured = 7;
+    int32 download_count = 8;
+    float rating = 9;
+    string created_at = 10;
+    string updated_at = 11;
+}
+
+// Request/Response messages for version management
+
+message ListAgentVersionsRequest {
+    string agent_id = 1;
+    string user_id = 2;  // For permission checking
+    optional int32 page = 3;
+    optional int32 page_size = 4;
+}
+
+message ListAgentVersionsResponse {
+    bool success = 1;
+    string message = 2;
+    repeated AgentVersion versions = 3;
+    int32 total = 4;
+    int32 page = 5;
+    int32 total_pages = 6;
+    string current_version_id = 7;  // ID of the currently active version
+}
+
+message GetAgentVersionRequest {
+    string agent_id = 1;
+    string version_id = 2;
+    string user_id = 3;  // For permission checking
+}
+
+message GetAgentVersionResponse {
+    bool success = 1;
+    string message = 2;
+    AgentVersion version = 3;
+}
+
+message SwitchAgentVersionRequest {
+    string agent_id = 1;
+    string version_id = 2;
+    string user_id = 3;  // Must be the owner to switch versions
+}
+
+message SwitchAgentVersionResponse {
+    bool success = 1;
+    string message = 2;
+    AgentVersion new_current_version = 3;
+}
+
+message CreateVersionAndPublishRequest {
+    string agent_id = 1;
+    string user_id = 2;
+    bool publish_to_marketplace = 3;
+}
+
+message CreateVersionAndPublishResponse {
+    bool success = 1;
+    string message = 2;
+    bool version_created = 3;
+    bool marketplace_updated = 4;
+    optional string version_number = 5;
+    optional string version_id = 6;
+    optional string marketplace_listing_id = 7;
+}
+
+
+message GetAgentsByIdsRequest {
+  repeated string ids = 1;
+}
+
+message GetAgentsByIdsResponse {
+  bool success = 1;
+  string message = 2;
+  repeated Agent agents = 3;
+}
+
+message FileEntry {
+  string file = 1;
+  string created_at = 2;
+  int32 size = 3;
+}
+
+message UrlEntry {
+  string url = 1;
+  string created_at = 2;
+}

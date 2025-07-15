@@ -1,0 +1,1088 @@
+syntax = "proto3";
+
+package analytics;
+
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/struct.proto"; // For JSON-like fields
+
+// Analytics Service definition
+service AnalyticsService {
+  // Track an analytics event
+  rpc TrackEvent(TrackEventRequest) returns (TrackEventResponse) {}
+
+  // Get metrics for a specific service
+  rpc GetServiceMetrics(GetServiceMetricsRequest) returns (GetServiceMetricsResponse) {}
+
+  // Get user activity data
+  rpc GetUserActivity(GetUserActivityRequest) returns (GetUserActivityResponse) {}
+
+  // Get rating analytics
+  rpc GetRatingAnalytics(GetRatingAnalyticsRequest) returns (GetRatingAnalyticsResponse) {}
+
+  // Overview Analytics - Dashboard functionality
+  rpc GetOverviewAnalytics(GetOverviewAnalyticsRequest) returns (GetOverviewAnalyticsResponse) {}
+
+  // Activate Functionality
+  rpc TrackActivation(TrackActivationRequest) returns (TrackActivationResponse) {}
+  rpc GetActivationMetrics(GetActivationMetricsRequest) returns (GetActivationMetricsResponse) {}
+
+  // Webhook Management
+  rpc CreateWebhook(CreateWebhookRequest) returns (CreateWebhookResponse) {}
+  rpc GetWebhooks(GetWebhooksRequest) returns (GetWebhooksResponse) {}
+  rpc UpdateWebhook(UpdateWebhookRequest) returns (UpdateWebhookResponse) {}
+  rpc DeleteWebhook(DeleteWebhookRequest) returns (DeleteWebhookResponse) {}
+  rpc GetWebhookLogs(GetWebhookLogsRequest) returns (GetWebhookLogsResponse) {}
+
+  // Dashboard Overview - Main analytics dashboard
+  rpc GetDashboardOverview(GetDashboardOverviewRequest) returns (GetDashboardOverviewResponse) {}
+
+  // Enhanced Dashboard Analytics - New comprehensive dashboard functionality
+  rpc GetDashboardMetrics(GetDashboardMetricsRequest) returns (GetDashboardMetricsResponse) {}
+  rpc GetCreditUsageBreakdown(GetCreditUsageBreakdownRequest) returns (GetCreditUsageBreakdownResponse) {}
+  rpc GetAppCreditUsage(GetAppCreditUsageRequest) returns (GetAppCreditUsageResponse) {}
+  rpc GetLatestApiRequests(GetLatestApiRequestsRequest) returns (GetLatestApiRequestsResponse) {}
+  rpc GetAgentPerformance(GetAgentPerformanceRequest) returns (GetAgentPerformanceResponse) {}
+  rpc GetWorkflowUtilization(GetWorkflowUtilizationRequest) returns (GetWorkflowUtilizationResponse) {}
+  rpc GetSystemActivity(GetSystemActivityRequest) returns (GetSystemActivityResponse) {}
+  rpc RecordApiRequest(RecordApiRequestRequest) returns (RecordApiRequestResponse) {}
+  rpc RecordSystemActivity(RecordSystemActivityRequest) returns (RecordSystemActivityResponse) {}
+}
+
+// Application Management Service definition
+service ApplicationService {
+  // Application Management
+  rpc CreateApplication(CreateApplicationRequest) returns (CreateApplicationResponse) {}
+  rpc GetApplications(GetApplicationsRequest) returns (GetApplicationsResponse) {}
+  rpc GetApplication(GetApplicationRequest) returns (GetApplicationResponse) {}
+  rpc UpdateApplication(UpdateApplicationRequest) returns (UpdateApplicationResponse) {}
+  rpc DeleteApplication(DeleteApplicationRequest) returns (DeleteApplicationResponse) {}
+  rpc AttachImageToApplication(AttachImageToApplicationRequest) returns (AttachImageToApplicationResponse) {}
+}
+
+// Service definition for managing Activities
+service ActivityService {
+  rpc CreateActivity(CreateActivityRequest) returns (CreateActivityResponse);
+  rpc UpdateActivity(UpdateActivityRequest) returns (UpdateActivityResponse);
+  rpc DeleteActivity(DeleteActivityRequest) returns (DeleteActivityResponse);
+  rpc CreateActivityLog(CreateActivityLogRequest) returns (ActivityLog);
+  rpc CreateActivityEvent(CreateActivityEventRequest) returns (CreateActivityEventResponse);
+  rpc GetActivity(GetActivityRequest) returns (GetActivityResponse);
+  rpc ListActivities(ListActivitiesRequest) returns (ListActivitiesResponse);
+  rpc ListActivityLogs(ListActivityLogsRequest) returns (ListActivityLogsResponse);
+  rpc ListActivityEvents(ListActivityEventsRequest) returns (ListActivityEventsResponse);
+}
+
+// Event types
+enum EventType {
+  EVENT_TYPE_UNSPECIFIED = 0;
+  EVENT_TYPE_USAGE = 1;
+  EVENT_TYPE_RATING = 2;
+  EVENT_TYPE_CREATION = 3;
+  EVENT_TYPE_MODIFICATION = 4;
+  EVENT_TYPE_DELETION = 5;
+  EVENT_TYPE_LOGIN = 6;
+  EVENT_TYPE_LOGOUT = 7;
+  EVENT_TYPE_ERROR = 8;
+  EVENT_TYPE_OTHER = 9;
+}
+
+// Service types
+enum ServiceType {
+  SERVICE_TYPE_UNSPECIFIED = 0;
+  SERVICE_TYPE_MCP = 1;
+  SERVICE_TYPE_WORKFLOW = 2;
+  SERVICE_TYPE_AGENT = 3;
+  SERVICE_TYPE_USER = 4;
+  SERVICE_TYPE_APPLICATION = 5;
+  SERVICE_TYPE_WEBHOOK = 6;
+  SERVICE_TYPE_OTHER = 7;
+}
+
+// Application status
+enum ApplicationStatus {
+  APPLICATION_STATUS_UNSPECIFIED = 0;
+  APPLICATION_STATUS_ACTIVE = 1;
+  APPLICATION_STATUS_INACTIVE = 2;
+  APPLICATION_STATUS_SUSPENDED = 3;
+}
+
+
+
+// Webhook status
+enum WebhookStatus {
+  WEBHOOK_STATUS_UNSPECIFIED = 0;
+  WEBHOOK_STATUS_ACTIVE = 1;
+  WEBHOOK_STATUS_INACTIVE = 2;
+  WEBHOOK_STATUS_FAILED = 3;
+}
+
+// Webhook event types
+enum WebhookEventType {
+  WEBHOOK_EVENT_TYPE_UNSPECIFIED = 0;
+  WEBHOOK_EVENT_TYPE_AGENT_EXECUTION = 1;
+  WEBHOOK_EVENT_TYPE_AGENT_INVOKED = 2;
+  WEBHOOK_EVENT_TYPE_WORKFLOW_COMPLETION = 3;
+  WEBHOOK_EVENT_TYPE_WORKFLOW_EXECUTED = 4;
+  WEBHOOK_EVENT_TYPE_MCP_USAGE = 5;
+  WEBHOOK_EVENT_TYPE_MCP_USED = 6;
+  WEBHOOK_EVENT_TYPE_USER_ACTIVATION = 7;
+  WEBHOOK_EVENT_TYPE_USER_SIGNUP = 8;
+  WEBHOOK_EVENT_TYPE_USER_ACTIVATED = 9;
+  WEBHOOK_EVENT_TYPE_API_USAGE = 10;
+  WEBHOOK_EVENT_TYPE_ERROR = 11;
+}
+
+// Activation event types
+enum ActivationEventType {
+  ACTIVATION_EVENT_TYPE_UNSPECIFIED = 0;
+  ACTIVATION_EVENT_TYPE_USER_SIGNUP = 1;
+  ACTIVATION_EVENT_TYPE_FIRST_AGENT_CREATED = 2;
+  ACTIVATION_EVENT_TYPE_FIRST_WORKFLOW_CREATED = 3;
+  ACTIVATION_EVENT_TYPE_FIRST_MCP_REGISTERED = 4;
+  ACTIVATION_EVENT_TYPE_FIRST_API_CALL = 5;
+  ACTIVATION_EVENT_TYPE_MARKETPLACE_USAGE = 6;
+}
+
+// Enhanced Analytics Request Types
+enum RequestType {
+  REQUEST_TYPE_UNSPECIFIED = 0;
+  REQUEST_TYPE_API_REQUEST = 1;
+  REQUEST_TYPE_WORKFLOW_EXEC = 2;
+  REQUEST_TYPE_AUTH_EVENT = 3;
+  REQUEST_TYPE_AGENT_INVOKE = 4;
+  REQUEST_TYPE_MCP_REQUEST = 5;
+}
+
+// Enhanced Analytics Request Status
+enum RequestStatus {
+  REQUEST_STATUS_UNSPECIFIED = 0;
+  REQUEST_STATUS_SUCCESS = 1;
+  REQUEST_STATUS_ERROR = 2;
+  REQUEST_STATUS_PENDING = 3;
+  REQUEST_STATUS_TIMEOUT = 4;
+}
+
+// Credit Usage Categories
+enum CreditCategory {
+  CREDIT_CATEGORY_UNSPECIFIED = 0;
+  CREDIT_CATEGORY_AGENTS = 1;
+  CREDIT_CATEGORY_WORKFLOWS = 2;
+  CREDIT_CATEGORY_CUSTOM_MCPS = 3;
+  CREDIT_CATEGORY_APP_CREDITS = 4;
+  CREDIT_CATEGORY_OTHER = 5;
+}
+
+// Request to track an analytics event
+message TrackEventRequest {
+  EventType event_type = 1;
+  ServiceType service_type = 2;
+  string entity_id = 3;
+  string user_id = 4;
+  string metadata = 5;  // JSON string with additional data
+}
+
+// Response for tracking an analytics event
+message TrackEventResponse {
+  bool success = 1;
+  string message = 2;
+  string event_id = 3;
+}
+
+// Request to get metrics for a service
+message GetServiceMetricsRequest {
+  ServiceType service_type = 1;
+  string entity_id = 2;
+  int32 time_period_days = 3;  // Optional: time period in days (0 for all time)
+}
+
+// Response with service metrics
+message GetServiceMetricsResponse {
+  bool success = 1;
+  string message = 2;
+  ServiceMetrics metrics = 3;
+}
+
+// Service metrics data
+message ServiceMetrics {
+  string entity_id = 1;
+  ServiceType service_type = 2;
+  int32 usage_count = 3;
+  float average_rating = 4;
+  int32 rating_count = 5;
+  repeated TimeSeriesDataPoint usage_time_series = 6;
+}
+
+// Time series data point
+message TimeSeriesDataPoint {
+  string date = 1;  // ISO format date string
+  int32 count = 2;
+}
+
+// Request to get user activity
+message GetUserActivityRequest {
+  string user_id = 1;
+  int32 time_period_days = 2;  // Optional: time period in days (0 for all time)
+}
+
+// Response with user activity data
+message GetUserActivityResponse {
+  bool success = 1;
+  string message = 2;
+  UserActivity activity = 3;
+}
+
+// User activity data
+message UserActivity {
+  string user_id = 1;
+  int32 mcp_usage_count = 2;
+  int32 workflow_usage_count = 3;
+  int32 agent_usage_count = 4;
+  int32 mcp_creation_count = 5;
+  int32 workflow_creation_count = 6;
+  int32 agent_creation_count = 7;
+  string last_activity_date = 8;  // ISO format date string
+}
+
+// Request to get rating analytics
+message GetRatingAnalyticsRequest {
+  ServiceType service_type = 1;
+  string entity_id = 2;  // Optional: specific entity ID (empty for all)
+  int32 time_period_days = 3;  // Optional: time period in days (0 for all time)
+}
+
+// Response with rating analytics
+message GetRatingAnalyticsResponse {
+  bool success = 1;
+  string message = 2;
+  RatingAnalytics analytics = 3;
+}
+
+// Rating analytics data
+message RatingAnalytics {
+  ServiceType service_type = 1;
+  string entity_id = 2;  // Empty if request was for all entities
+  float average_rating = 3;
+  int32 rating_count = 4;
+  map<string, int32> rating_distribution = 5;  // Map of rating value to count
+}
+
+// ===== OVERVIEW ANALYTICS MESSAGES =====
+
+// Request to get overview analytics for dashboard
+message GetOverviewAnalyticsRequest {
+  string user_id = 1;
+  int32 time_period_days = 2;  // Optional: time period in days (0 for all time)
+  string application_id = 3;   // Optional: filter by specific application
+}
+
+// Response with overview analytics
+message GetOverviewAnalyticsResponse {
+  bool success = 1;
+  string message = 2;
+  OverviewAnalytics analytics = 3;
+}
+
+// Overview analytics data for dashboard
+message OverviewAnalytics {
+  // Credit and usage metrics
+  CreditUsage credit_usage = 1;
+
+  // Entity counts
+  int32 active_agents_count = 2;
+  int32 active_workflows_count = 3;
+  int32 active_mcps_count = 4;
+  int32 applications_count = 5;
+
+  // Request metrics
+  RequestMetrics request_metrics = 6;
+
+  // Recent activity
+  repeated RecentActivity recent_activities = 7;
+
+  // Time series data
+  repeated TimeSeriesDataPoint usage_trend = 8;
+  repeated TimeSeriesDataPoint credit_trend = 9;
+}
+
+// Credit usage information
+message CreditUsage {
+  float total_credits_used = 1;
+  float credits_remaining = 2;
+  float credits_limit = 3;
+  float daily_average = 4;
+  float projected_monthly = 5;
+}
+
+// Request metrics
+message RequestMetrics {
+  int32 total_requests = 1;
+  int32 successful_requests = 2;
+  int32 failed_requests = 3;
+  float average_response_time = 4;
+  repeated TimeSeriesDataPoint request_trend = 5;
+}
+
+// Recent activity item
+message RecentActivity {
+  string activity_id = 1;
+  string activity_type = 2;  // "api_call", "agent_execution", "workflow_run", etc.
+  string entity_id = 3;
+  string entity_name = 4;
+  string status = 5;  // "success", "failed", "pending"
+  string timestamp = 6;  // ISO format
+  string metadata = 7;  // JSON string with additional details
+}
+
+// ===== APPS MANAGEMENT MESSAGES =====
+
+// Request to create a new application
+message CreateApplicationRequest {
+  string user_id = 1;
+  string name = 2;
+  string description = 3;
+  repeated string workflow_ids = 4;
+  repeated string agent_ids = 5;
+  repeated string api_keys = 6;  // Optional: API key IDs for application access
+}
+
+// Response for creating an application
+message CreateApplicationResponse {
+  bool success = 1;
+  string message = 2;
+  Application application = 3;
+}
+
+// Request to get applications for a user
+message GetApplicationsRequest {
+  string user_id = 1;
+  ApplicationStatus status = 2;  // Optional filter
+  int32 limit = 3;
+  int32 offset = 4;
+}
+
+// Response with list of applications
+message GetApplicationsResponse {
+  bool success = 1;
+  string message = 2;
+  repeated Application applications = 3;
+  int32 total_count = 4;
+}
+
+// Request to get a specific application
+message GetApplicationRequest {
+  string application_id = 1;
+  string user_id = 2;
+}
+
+// Response with application details
+message GetApplicationResponse {
+  bool success = 1;
+  string message = 2;
+  Application application = 3;
+  ApplicationMetrics metrics = 4;
+}
+
+// Request to update an application
+message UpdateApplicationRequest {
+  string application_id = 1;
+  string user_id = 2;
+  string name = 3;
+  string description = 4;
+  repeated string workflow_ids = 5;
+  repeated string agent_ids = 6;
+  ApplicationStatus status = 7;
+  repeated string api_keys = 8;  // Optional: API key IDs for application access
+}
+
+// Response for updating an application
+message UpdateApplicationResponse {
+  bool success = 1;
+  string message = 2;
+  Application application = 3;
+}
+
+// Request to delete an application
+message DeleteApplicationRequest {
+  string application_id = 1;
+  string user_id = 2;
+}
+
+// Response for deleting an application
+message DeleteApplicationResponse {
+  bool success = 1;
+  string message = 2;
+}
+
+// Request to attach an image to an application
+message AttachImageToApplicationRequest {
+  string application_id = 1;
+  string user_id = 2;
+  string image_name = 3;
+  string image_type = 4;  // "image/jpeg", "image/png", etc.
+  bytes image_data = 5;   // Binary image data
+  string description = 6; // Optional description of the image
+}
+
+// Response for attaching an image to an application
+message AttachImageToApplicationResponse {
+  bool success = 1;
+  string message = 2;
+  string image_id = 3;    // Unique identifier for the attached image
+  string image_url = 4;   // URL to access the image (if applicable)
+}
+
+// Application data
+message Application {
+  string id = 1;
+  string user_id = 2;
+  string name = 3;
+  string description = 4;
+  repeated string workflow_ids = 5;
+  repeated string agent_ids = 6;
+  ApplicationStatus status = 7;
+  string created_at = 8;  // ISO format
+  string updated_at = 9;  // ISO format
+  repeated string api_keys = 10;  // API key IDs for application access
+  bool is_deleted = 11;  // Soft deletion flag
+}
+
+// Application metrics
+message ApplicationMetrics {
+  string application_id = 1;
+  int32 total_requests = 2;
+  int32 successful_requests = 3;
+  int32 failed_requests = 4;
+  float credits_used = 5;
+  string last_request_at = 6;  // ISO format
+  repeated TimeSeriesDataPoint usage_trend = 7;
+}
+
+
+
+// ===== ACTIVATION FUNCTIONALITY MESSAGES =====
+
+// Request to track an activation event
+message TrackActivationRequest {
+  string user_id = 1;
+  ActivationEventType event_type = 2;
+  string entity_id = 3;  // Optional: ID of related entity
+  string metadata = 4;   // JSON string with additional data
+}
+
+// Response for tracking activation
+message TrackActivationResponse {
+  bool success = 1;
+  string message = 2;
+  string activation_id = 3;
+}
+
+// Request to get activation metrics
+message GetActivationMetricsRequest {
+  string user_id = 1;  // Optional: specific user, empty for all users
+  int32 time_period_days = 2;  // Optional: time period in days (0 for all time)
+}
+
+// Response with activation metrics
+message GetActivationMetricsResponse {
+  bool success = 1;
+  string message = 2;
+  ActivationMetrics metrics = 3;
+}
+
+// Activation metrics data
+message ActivationMetrics {
+  string user_id = 1;  // Empty if request was for all users
+  int32 total_signups = 2;
+  int32 activated_users = 3;  // Users who completed at least one activation event
+  float activation_rate = 4;  // Percentage of users who activated
+  map<string, int32> activation_funnel = 5;  // Map of event type to count
+  repeated TimeSeriesDataPoint activation_trend = 6;
+}
+
+// ===== WEBHOOK MANAGEMENT MESSAGES =====
+
+// Request to create a webhook
+message CreateWebhookRequest {
+  string user_id = 1;
+  string application_id = 2;  // Optional: associate with specific application
+  string url = 3;
+  repeated WebhookEventType event_types = 4;
+  string secret = 5;  // Optional: secret for payload verification
+  string description = 6;
+  bool is_active = 7;
+}
+
+// Response for creating a webhook
+message CreateWebhookResponse {
+  bool success = 1;
+  string message = 2;
+  Webhook webhook = 3;
+}
+
+// Request to get webhooks
+message GetWebhooksRequest {
+  string user_id = 1;
+  string application_id = 2;  // Optional filter
+  WebhookStatus status = 3;   // Optional filter
+  int32 limit = 4;
+  int32 offset = 5;
+}
+
+// Response with list of webhooks
+message GetWebhooksResponse {
+  bool success = 1;
+  string message = 2;
+  repeated Webhook webhooks = 3;
+  int32 total_count = 4;
+}
+
+// Request to update a webhook
+message UpdateWebhookRequest {
+  string webhook_id = 1;
+  string user_id = 2;
+  string url = 3;
+  repeated WebhookEventType event_types = 4;
+  string secret = 5;
+  string description = 6;
+  bool is_active = 7;
+}
+
+// Response for updating a webhook
+message UpdateWebhookResponse {
+  bool success = 1;
+  string message = 2;
+  Webhook webhook = 3;
+}
+
+// Request to delete a webhook
+message DeleteWebhookRequest {
+  string webhook_id = 1;
+  string user_id = 2;
+}
+
+// Response for deleting a webhook
+message DeleteWebhookResponse {
+  bool success = 1;
+  string message = 2;
+}
+
+// Request to get webhook delivery logs
+message GetWebhookLogsRequest {
+  string webhook_id = 1;
+  string user_id = 2;
+  int32 time_period_days = 3;  // Optional: time period in days (0 for all time)
+  int32 limit = 4;
+  int32 offset = 5;
+}
+
+// Response with webhook logs
+message GetWebhookLogsResponse {
+  bool success = 1;
+  string message = 2;
+  repeated WebhookLog logs = 3;
+  int32 total_count = 4;
+}
+
+// Webhook data
+message Webhook {
+  string id = 1;
+  string user_id = 2;
+  string application_id = 3;
+  string url = 4;
+  repeated WebhookEventType event_types = 5;
+  string description = 6;
+  bool is_active = 7;
+  WebhookStatus status = 8;
+  string created_at = 9;  // ISO format
+  string updated_at = 10; // ISO format
+  int32 delivery_count = 11;
+  int32 failure_count = 12;
+  string last_delivery_at = 13;  // ISO format
+}
+
+// Webhook delivery log
+message WebhookLog {
+  string id = 1;
+  string webhook_id = 2;
+  WebhookEventType event_type = 3;
+  string payload = 4;  // JSON string
+  int32 response_status = 5;
+  string response_body = 6;
+  string error_message = 7;
+  string delivered_at = 8;  // ISO format
+  bool success = 9;
+  int32 retry_count = 10;
+}
+
+// ===== DASHBOARD OVERVIEW MESSAGES =====
+
+// Request to get dashboard overview analytics
+message GetDashboardOverviewRequest {
+  string user_id = 1;
+  int32 time_period_days = 2;  // Optional: time period in days (default 7)
+}
+
+// Response with dashboard overview analytics
+message GetDashboardOverviewResponse {
+  bool success = 1;
+  string message = 2;
+  DashboardOverview overview = 3;
+}
+
+// Dashboard overview data
+message DashboardOverview {
+  string user_id = 1;
+  int32 active_agents = 2;
+  float credit_usage = 3;
+  int32 agent_requests = 4;
+  int32 workflow_requests = 5;
+  int32 custom_mcps = 6;
+  map<string, float> credit_breakdown = 7;  // Map of category to credit amount
+  repeated DashboardTimeSeriesPoint app_credit_usage = 8;
+  repeated AgentPerformanceDataPoint agent_performance = 9;
+  repeated RecentEvent recent_events = 10;
+}
+
+// Time series data point for dashboard with float value
+message DashboardTimeSeriesPoint {
+  string timestamp = 1;  // ISO format
+  float value = 2;
+}
+
+// Agent performance data point
+message AgentPerformanceDataPoint {
+  string timestamp = 1;  // ISO format
+  int32 requests = 2;
+  float completion_rate = 3;  // Percentage
+}
+
+// Recent event/activity
+message RecentEvent {
+  string type = 1;  // "API Request", "Workflow Exec", "Auth Event", etc.
+  string endpoint = 2;
+  string status = 3;  // "success", "failed", "pending"
+  string timestamp = 4;  // ISO format
+  string duration = 5;  // e.g., "320ms", "1.2s"
+  string user = 6;  // User identifier
+}
+
+// ===== ENHANCED DASHBOARD ANALYTICS MESSAGES =====
+
+// Request to get dashboard metrics
+message GetDashboardMetricsRequest {
+  string user_id = 1;  // Optional: user-specific metrics
+  int32 days = 2;      // Number of days to look back (default: 7)
+}
+
+// Response with dashboard metrics
+message GetDashboardMetricsResponse {
+  bool success = 1;
+  string message = 2;
+  DashboardMetrics metrics = 3;
+}
+
+// Dashboard metrics data
+message DashboardMetrics {
+  int32 active_agents = 1;
+  float credit_usage = 2;
+  int32 agent_requests = 3;
+  int32 workflow_requests = 4;
+  int32 custom_mcps = 5;
+  float credit_usage_change = 6;
+  float agent_requests_change_pct = 7;
+  float workflow_requests_change_pct = 8;
+  int32 custom_mcps_change = 9;
+  float total_cost = 10;
+}
+
+// Request to get credit usage breakdown
+message GetCreditUsageBreakdownRequest {
+  string user_id = 1;  // Optional: user-specific metrics
+  int32 days = 2;      // Number of days to aggregate (default: 7)
+}
+
+// Response with credit usage breakdown
+message GetCreditUsageBreakdownResponse {
+  bool success = 1;
+  string message = 2;
+  repeated CreditUsageBreakdownItem breakdown = 3;
+}
+
+// Credit usage breakdown item
+message CreditUsageBreakdownItem {
+  string category = 1;
+  float credits_used = 2;
+  float cost = 3;
+  int32 request_count = 4;
+}
+
+// Request to get app credit usage
+message GetAppCreditUsageRequest {
+  string user_id = 1;        // Optional: user filter
+  string application_id = 2; // Optional: application filter
+  int32 days = 3;            // Number of days of data (default: 7)
+}
+
+// Response with app credit usage
+message GetAppCreditUsageResponse {
+  bool success = 1;
+  string message = 2;
+  AppCreditUsageData data = 3;
+}
+
+// App credit usage data
+message AppCreditUsageData {
+  float total_credits = 1;
+  float total_cost = 2;
+  repeated AppCreditTimeSeriesPoint timeseries = 3;
+}
+
+// App credit time series point
+message AppCreditTimeSeriesPoint {
+  string timestamp = 1;  // ISO format
+  float credits_used = 2;
+  float cost = 3;
+  float cumulative_credits = 4;
+  float cumulative_cost = 5;
+}
+
+// Request to get latest API requests
+message GetLatestApiRequestsRequest {
+  string user_id = 1;  // Optional: user filter
+  int32 limit = 2;     // Maximum number of records (default: 50)
+}
+
+// Response with latest API requests
+message GetLatestApiRequestsResponse {
+  bool success = 1;
+  string message = 2;
+  repeated ApiRequestEventItem events = 3;
+}
+
+// API request event item
+message ApiRequestEventItem {
+  string id = 1;
+  string type = 2;
+  string endpoint = 3;
+  string method = 4;
+  string status = 5;
+  string timestamp = 6;  // ISO format
+  int32 duration_ms = 7;
+  string user_email = 8;
+  string error_message = 9;
+  float credits_used = 10;
+  float cost = 11;
+}
+
+// Request to get agent performance
+message GetAgentPerformanceRequest {
+  string user_id = 1;  // Optional: user filter
+  int32 days = 2;      // Number of days of data (default: 7)
+}
+
+// Response with agent performance
+message GetAgentPerformanceResponse {
+  bool success = 1;
+  string message = 2;
+  repeated AgentPerformanceItem performance = 3;
+}
+
+// Agent performance item
+message AgentPerformanceItem {
+  string agent_id = 1;
+  string agent_name = 2;
+  int32 total_requests = 3;
+  int32 successful_requests = 4;
+  int32 failed_requests = 5;
+  float success_rate = 6;
+  float avg_response_time_ms = 7;
+  float total_credits_used = 8;
+  float total_cost = 9;
+  bool is_active = 10;
+}
+
+// Request to get workflow utilization
+message GetWorkflowUtilizationRequest {
+  string user_id = 1;  // Optional: user filter
+  int32 days = 2;      // Number of days of data (default: 7)
+}
+
+// Response with workflow utilization
+message GetWorkflowUtilizationResponse {
+  bool success = 1;
+  string message = 2;
+  repeated WorkflowUtilizationItem utilization = 3;
+}
+
+// Workflow utilization item
+message WorkflowUtilizationItem {
+  string workflow_id = 1;
+  string workflow_name = 2;
+  int32 total_executions = 3;
+  int32 successful_executions = 4;
+  int32 failed_executions = 5;
+  float success_rate = 6;
+  float avg_execution_time_ms = 7;
+  float completion_rate_pct = 8;
+  float total_credits_used = 9;
+  float total_cost = 10;
+}
+
+// Request to get system activity
+message GetSystemActivityRequest {
+  string user_id = 1;  // Optional: user filter
+  int32 limit = 2;     // Maximum number of records (default: 10)
+}
+
+// Response with system activity
+message GetSystemActivityResponse {
+  bool success = 1;
+  string message = 2;
+  repeated SystemActivityItem activities = 3;
+}
+
+// System activity item
+message SystemActivityItem {
+  string id = 1;
+  string activity_type = 2;
+  string title = 3;
+  string description = 4;
+  string severity = 5;
+  string status = 6;
+  string timestamp = 7;  // ISO format
+  string user_id = 8;
+  string customer_id = 9;
+  string metadata = 10;  // JSON string
+}
+
+// Request to record an API request
+message RecordApiRequestRequest {
+  RequestType request_type = 1;
+  string endpoint = 2;
+  RequestStatus status = 3;
+  int32 duration_ms = 4;
+  string user_id = 5;
+  string user_email = 6;
+  string method = 7;
+  string ip_address = 8;
+  string user_agent = 9;
+  string request_data = 10;   // JSON string
+  string response_data = 11;  // JSON string
+  string error_message = 12;
+  string agent_id = 13;
+  string workflow_id = 14;
+  string application_id = 15;
+  float credits_used = 16;
+  float cost = 17;
+}
+
+// Response for recording API request
+message RecordApiRequestResponse {
+  bool success = 1;
+  string message = 2;
+  string event_id = 3;
+}
+
+// Request to record system activity
+message RecordSystemActivityRequest {
+  string activity_type = 1;
+  string title = 2;
+  string description = 3;
+  string severity = 4;
+  string status = 5;
+  string user_id = 6;
+  string customer_id = 7;
+  string metadata = 8;  // JSON string
+}
+
+// Response for recording system activity
+message RecordSystemActivityResponse {
+  bool success = 1;
+  string message = 2;
+  string activity_id = 3;
+}
+
+// NEW ENUMS
+enum ActivityType {
+  ACTIVITY_TYPE_UNSPECIFIED = 0;
+  WORKFLOW = 1;
+  AGENT = 2;
+}
+
+enum ActivityStatus {
+  ACTIVITY_STATUS_UNSPECIFIED = 0;
+  STARTED = 1;
+  IN_PROGRESS = 2;
+  COMPLETED = 3;
+  FAILED = 4;
+}
+
+enum LogType {
+  LOG_TYPE_UNSPECIFIED = 0;
+  TOOL_EXECUTION = 1;
+  NODE_EXECUTION = 2;
+}
+
+enum LogStatus {
+  LOG_STATUS_UNSPECIFIED = 0;
+  SUCCESS = 1;
+  FAILURE = 2;
+}
+
+
+// NEW MESSAGES
+message Activity {
+  string id = 1;
+  string resource_id = 2;
+  ActivityType type = 3;
+  string user_id = 4;
+  ActivityStatus status = 5;
+  google.protobuf.Struct user_metadata = 6;
+  repeated ActivityLog logs = 7;
+  repeated ActivityEvent events = 8;
+  google.protobuf.Timestamp created_at = 9;
+  google.protobuf.Timestamp updated_at = 10;
+}
+
+message ActivityLog {
+  string id = 1;
+  string activity_id = 2;
+  LogType log_type = 3;
+  LogStatus log_status = 4;
+  google.protobuf.Struct log_details = 5;
+  google.protobuf.Timestamp created_at = 6;
+}
+
+message ActivityEvent {
+  string id = 1;
+  string activity_id = 2;
+  string event_name = 3;
+  google.protobuf.Struct event_details = 4;
+  google.protobuf.Timestamp created_at = 5;
+}
+
+// REQUEST/RESPONSE MESSAGES for the new service
+
+message CreateActivityRequest {
+  string resource_id = 1;
+  ActivityType type = 2;
+  string user_id = 3;
+  ActivityStatus status = 4;
+  google.protobuf.Struct user_metadata = 5;
+}
+
+message CreateActivityResponse {
+  bool success = 1;
+  string message = 2;
+  Activity activity = 3;
+}
+
+message CreateActivityLogRequest {
+  string activity_id = 1;
+  LogType log_type = 2;
+  LogStatus log_status = 3;
+  google.protobuf.Struct log_details = 4;
+}
+
+message CreateActivityEventRequest {
+  string resource_id = 1;
+  ActivityType type = 2;
+  string user_id = 3;
+  ActivityStatus status = 4;
+  google.protobuf.Struct user_metadata = 5;
+  string event_name = 6;
+  google.protobuf.Struct event_details = 7;
+}
+
+message CreateActivityEventResponse {
+  bool success = 1;
+  string message = 2;
+  ActivityEvent event = 3;
+}
+
+message GetActivityRequest {
+  string activity_id = 1;
+}
+
+message GetActivityResponse {
+  Activity activity = 1;
+  repeated ActivityLog logs = 2;
+  repeated ActivityEvent events = 3;
+}
+
+message ListActivitiesRequest {
+  string user_id = 1;
+  ActivityType type = 2;
+  int32 page_size = 3;
+  string page_token = 4;
+}
+
+message PaginationMetadata {
+  int32 total = 1;
+  int32 total_pages = 2;
+  int32 current_page = 3;
+  int32 page_size = 4;
+  bool has_next_page = 5;
+  bool has_previous_page = 6;
+}
+
+message ListActivitiesResponse {
+  bool success = 1;
+  string message = 2;
+  repeated Activity activities = 3;
+  PaginationMetadata metadata = 4;
+}
+
+message ListActivityLogsRequest {
+  string activity_id = 1;  // Optional: filter by specific activity
+  string user_id = 2;      // Optional: filter by user
+  LogType log_type = 3;    // Optional: filter by log type
+  LogStatus log_status = 4; // Optional: filter by log status
+  int32 page_size = 5;
+  int32 offset = 6;
+}
+
+message ListActivityLogsResponse {
+  bool success = 1;
+  string message = 2;
+  repeated ActivityLog data = 3;
+  PaginationMetadata metadata = 4;
+}
+
+message ListActivityEventsRequest {
+  string activity_id = 1;  // Optional: filter by specific activity
+  string user_id = 2;      // Optional: filter by user
+  string event_name = 3;   // Optional: filter by event name
+  int32 page_size = 4;
+  int32 offset = 5;
+}
+
+message ListActivityEventsResponse {
+  bool success = 1;
+  string message = 2;
+  repeated ActivityEvent data = 3;
+  PaginationMetadata metadata = 4;
+}
+
+message UpdateActivityRequest {
+  string id = 1;
+  string user_id = 2;
+  ActivityStatus status = 3;
+  google.protobuf.Struct user_metadata = 4;
+}
+
+message UpdateActivityResponse {
+  bool success = 1;
+  string message = 2;
+  Activity activity = 3;
+}
+
+message DeleteActivityRequest {
+  string id = 1;
+  string user_id = 2;
+}
+
+message DeleteActivityResponse {
+  bool success = 1;
+  string message = 2;
+}

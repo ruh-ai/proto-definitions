@@ -1,0 +1,243 @@
+syntax = "proto3";
+
+package context_engine;
+
+// Context Engine Service for managing Pinecone indexes and embeddings
+service ContextEngineService {
+    // Index Management
+    rpc CreateIndex(CreateIndexRequest) returns (CreateIndexResponse);
+    rpc DeleteIndex(DeleteIndexRequest) returns (DeleteIndexResponse);
+    rpc ListIndexes(ListIndexesRequest) returns (ListIndexesResponse);
+    rpc GetIndexInfo(GetIndexInfoRequest) returns (GetIndexInfoResponse);
+    
+    // Embedding Operations
+    rpc CreateEmbedding(CreateEmbeddingRequest) returns (CreateEmbeddingResponse);
+    rpc BatchCreateEmbeddings(BatchCreateEmbeddingsRequest) returns (BatchCreateEmbeddingsResponse);
+    rpc UpdateEmbedding(UpdateEmbeddingRequest) returns (UpdateEmbeddingResponse);
+    rpc DeleteEmbedding(DeleteEmbeddingRequest) returns (DeleteEmbeddingResponse);
+    
+    // Query Operations
+    rpc QuerySimilar(QuerySimilarRequest) returns (QuerySimilarResponse);
+    rpc BatchQuerySimilar(BatchQuerySimilarRequest) returns (BatchQuerySimilarResponse);
+    rpc HybridSearch(HybridSearchRequest) returns (HybridSearchResponse);
+}
+
+// Index Management Messages
+message CreateIndexRequest {
+    string index_name = 1;
+    int32 dimension = 2;
+    string metric = 3; // cosine, euclidean, dotproduct
+    string cloud = 4; // aws, gcp, azure
+    string region = 5;
+    map<string, string> metadata = 6;
+}
+
+message CreateIndexResponse {
+    bool success = 1;
+    string message = 2;
+    IndexInfo index_info = 3;
+}
+
+message DeleteIndexRequest {
+    string index_name = 1;
+}
+
+message DeleteIndexResponse {
+    bool success = 1;
+    string message = 2;
+}
+
+message ListIndexesRequest {
+    // No fields needed - list all indexes
+}
+
+message ListIndexesResponse {
+    bool success = 1;
+    string message = 2;
+    repeated IndexInfo indexes = 3;
+}
+
+message GetIndexInfoRequest {
+    string index_name = 1;
+}
+
+message GetIndexInfoResponse {
+    bool success = 1;
+    string message = 2;
+    IndexInfo index_info = 3;
+}
+
+message IndexInfo {
+    string name = 1;
+    int32 dimension = 2;
+    string metric = 3;
+    int64 total_vectors = 4;
+    string status = 5;
+    string created_at = 6;
+    map<string, string> metadata = 7;
+}
+
+// Embedding Operations Messages
+message CreateEmbeddingRequest {
+    string index_name = 1;
+    string vector_id = 2;
+    repeated float values = 3;
+    map<string, string> metadata = 4;
+    string text_content = 5; // Optional: for auto-embedding generation
+}
+
+message CreateEmbeddingResponse {
+    bool success = 1;
+    string message = 2;
+    string vector_id = 3;
+}
+
+message BatchCreateEmbeddingsRequest {
+    string index_name = 1;
+    repeated EmbeddingData embeddings = 2;
+}
+
+message BatchCreateEmbeddingsResponse {
+    bool success = 1;
+    string message = 2;
+    repeated string vector_ids = 3;
+    int32 successful_count = 4;
+    int32 failed_count = 5;
+}
+
+message UpdateEmbeddingRequest {
+    string index_name = 1;
+    string vector_id = 2;
+    repeated float values = 3;
+    map<string, string> metadata = 4;
+}
+
+message UpdateEmbeddingResponse {
+    bool success = 1;
+    string message = 2;
+}
+
+message DeleteEmbeddingRequest {
+    string index_name = 1;
+    repeated string vector_ids = 2;
+    map<string, string> filter = 3; // Optional: delete by metadata filter
+}
+
+message DeleteEmbeddingResponse {
+    bool success = 1;
+    string message = 2;
+    int32 deleted_count = 3;
+}
+
+message EmbeddingData {
+    string vector_id = 1;
+    repeated float values = 2;
+    map<string, string> metadata = 3;
+    string text_content = 4; // Optional: for auto-embedding generation
+}
+
+// Query Operations Messages
+message QuerySimilarRequest {
+    string index_name = 1;
+    repeated float query_vector = 2;
+    string query_text = 3; // Alternative to query_vector for auto-embedding
+    int32 top_k = 4;
+    map<string, string> filter = 5;
+    bool include_metadata = 6;
+    bool include_values = 7;
+}
+
+message QuerySimilarResponse {
+    bool success = 1;
+    string message = 2;
+    repeated SimilarityMatch matches = 3;
+}
+
+message BatchQuerySimilarRequest {
+    string index_name = 1;
+    repeated QueryData queries = 2;
+}
+
+message BatchQuerySimilarResponse {
+    bool success = 1;
+    string message = 2;
+    repeated QueryResult results = 3;
+}
+
+message HybridSearchRequest {
+    string index_name = 1;
+    string query_text = 2;
+    int32 top_k = 3;
+    string user_id = 4;
+    string agent_id = 5;
+    repeated string file_ids = 6; // Optional: limit search to specific files
+    SearchStrategy strategy = 7;
+}
+
+message HybridSearchResponse {
+    bool success = 1;
+    string message = 2;
+    repeated EnhancedSearchResult results = 3;
+    string search_strategy_used = 4;
+}
+
+message QueryData {
+    repeated float query_vector = 1;
+    string query_text = 2;
+    int32 top_k = 3;
+    map<string, string> filter = 4;
+    bool include_metadata = 5;
+    bool include_values = 6;
+}
+
+message QueryResult {
+    repeated SimilarityMatch matches = 1;
+    string query_id = 2;
+}
+
+message SimilarityMatch {
+    string vector_id = 1;
+    float score = 2;
+    repeated float values = 3;
+    map<string, string> metadata = 4;
+}
+
+message EnhancedSearchResult {
+    string file_id = 1;
+    string file_name = 2;
+    string mime_type = 3;
+    string web_view_link = 4;
+    string created_time = 5;
+    string modified_time = 6;
+    float score = 7;
+    string vector_id = 8;
+    string chunk_text = 9;
+    string search_type = 10;
+    repeated EntityInfo entities = 11;
+    repeated RelationshipInfo relationships = 12;
+}
+
+message EntityInfo {
+    string id = 1;
+    string name = 2;
+    string type = 3;
+    string description = 4;
+    float confidence_score = 5;
+}
+
+message RelationshipInfo {
+    string id = 1;
+    string source_entity = 2;
+    string target_entity = 3;
+    string relationship_type = 4;
+    string description = 5;
+    float confidence_score = 6;
+}
+
+enum SearchStrategy {
+    VECTOR_ONLY = 0;
+    GRAPH_ONLY = 1;
+    HYBRID = 2;
+    ENTITY_CENTRIC = 3;
+    RELATIONSHIP_CENTRIC = 4;
+}

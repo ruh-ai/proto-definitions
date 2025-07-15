@@ -1,0 +1,54 @@
+syntax = "proto3";
+
+package notifications;
+
+service NotificationService {
+    // Get paginated notifications for a user
+    rpc GetUserNotifications (GetUserNotificationsRequest) returns (GetUserNotificationsResponse);
+    rpc MarkNotificationAsSeen (MarkNotificationAsSeenRequest) returns (MarkNotificationAsSeenResponse);
+    rpc GetNotificationById (GetNotificationByIdRequest) returns (GetNotificationByIdResponse);
+}
+
+message Notification {
+    string id = 1;
+    string title = 2;
+    string user_id = 3;
+    string link = 4;
+    string logo = 5;
+    bool seen = 6;
+    string created_at = 7;
+}
+
+message GetUserNotificationsRequest {
+    string user_id = 1;
+    int32 page = 2;
+    int32 page_size = 3;
+}
+
+message GetUserNotificationsResponse {
+    repeated Notification notifications = 1;
+    int32 total = 2;
+    int32 page = 3;
+    int32 total_pages = 4;
+}
+
+message MarkNotificationAsSeenRequest {
+    string notification_id = 1;
+    string user_id = 2;
+}
+
+message MarkNotificationAsSeenResponse {
+    bool success = 1;
+    string message = 2;
+}
+
+message GetNotificationByIdRequest {
+    string notification_id = 1;
+    string user_id = 2;
+}
+
+message GetNotificationByIdResponse {
+    Notification notification = 1;
+    bool success = 2;
+    string message = 3;
+}

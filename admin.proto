@@ -1,0 +1,161 @@
+syntax = "proto3";
+
+package admin;
+
+service AdminService {
+  // Authentication
+  rpc login(LoginRequest) returns (LoginResponse);
+  rpc accessToken(AccessTokenRequest) returns (AccessTokenResponse);
+
+  // Admin Management
+  rpc createAdmin(CreateAdminRequest) returns (AdminResponse);
+  rpc getAdmin(GetAdminRequest) returns (AdminResponse);
+  rpc updateAdmin(UpdateAdminRequest) returns (AdminResponse);
+  rpc deleteAdmin(DeleteAdminRequest) returns (DeleteAdminResponse);
+  rpc listAdmins(ListAdminsRequest) returns (ListAdminsResponse);
+
+  // Role Management
+  rpc createRole(CreateRoleRequest) returns (RoleResponse);
+  rpc getRole(GetRoleRequest) returns (RoleResponse);
+  rpc updateRole(UpdateRoleRequest) returns (RoleResponse);
+  rpc deleteRole(DeleteRoleRequest) returns (DeleteRoleResponse);
+  rpc listRoles(ListRolesRequest) returns (ListRolesResponse);
+  rpc assignRole(AssignRoleRequest) returns (AdminResponse);
+}
+
+message LoginRequest {
+  string email = 1;
+  string password = 2;
+}
+
+message LoginResponse {
+  bool success = 1;
+  string message = 2;
+  string accessToken = 3;
+  string refreshToken = 4;
+  AdminInfo admin = 5;
+}
+
+message AccessTokenRequest {
+  string refreshToken = 1;
+}
+
+message AccessTokenResponse {
+  bool success = 1;
+  string message = 2;
+  string accessToken = 3;
+  string refreshToken = 4;
+}
+
+message CreateAdminRequest {
+  string email = 1;
+  string password = 2;
+  string fullName = 3;
+  repeated string roles = 4;
+}
+
+message GetAdminRequest {
+  string adminId = 1;
+}
+
+message UpdateAdminRequest {
+  string adminId = 1;
+  optional string fullName = 2;
+  optional string email = 3;
+  optional string password = 4;
+  repeated string roles = 5;
+}
+
+message DeleteAdminRequest {
+  string adminId = 1;
+}
+
+message DeleteAdminResponse {
+  bool success = 1;
+  string message = 2;
+}
+
+message ListAdminsRequest {
+  int32 page = 1;
+  int32 pageSize = 2;
+}
+
+message ListAdminsResponse {
+  repeated AdminInfo admins = 1;
+  int32 total = 2;
+  int32 page = 3;
+  int32 totalPages = 4;
+}
+
+message AdminResponse {
+  bool success = 1;
+  string message = 2;
+  AdminInfo admin = 3;
+}
+
+message AdminInfo {
+  string adminId = 1;
+  string email = 2;
+  string fullName = 3;
+  repeated RoleInfo roles = 4;
+  string createdAt = 5;
+  string updatedAt = 6;
+}
+
+message RoleInfo {
+  string roleId = 1;
+  string name = 2;
+  string description = 3;
+  repeated string permissions = 4;
+  string createdAt = 5;
+  string updatedAt = 6;
+}
+
+message CreateRoleRequest {
+  string name = 1;
+  string description = 2;
+  repeated string permissions = 3;
+}
+
+message GetRoleRequest {
+  string roleId = 1;
+}
+
+message UpdateRoleRequest {
+  string roleId = 1;
+  optional string name = 2;
+  optional string description = 3;
+  repeated string permissions = 4;
+}
+
+message DeleteRoleRequest {
+  string roleId = 1;
+}
+
+message DeleteRoleResponse {
+  bool success = 1;
+  string message = 2;
+}
+
+message ListRolesRequest {
+  int32 page = 1;
+  int32 pageSize = 2;
+}
+
+message ListRolesResponse {
+  repeated RoleInfo roles = 1;
+  int32 total = 2;
+  int32 page = 3;
+  int32 totalPages = 4;
+}
+
+message RoleResponse {
+  bool success = 1;
+  string message = 2;
+  RoleInfo role = 3;
+}
+
+message AssignRoleRequest {
+  string adminId = 1;
+  repeated string roleIds = 2;
+}

@@ -1,0 +1,627 @@
+syntax = "proto3";
+
+package organisation;
+
+// Enums
+enum Visibility {
+  PRIVATE = 0;
+  PUBLIC = 1;
+}
+
+// Source type enum
+enum SourceType {
+  GOOGLE_DRIVE = 0;
+  SLACK = 1;
+  JIRA = 2;
+  // Add more as needed
+}
+
+// The Organisation service definition
+service OrganisationService {
+  // Create a new organisation
+  rpc createOrganisation (CreateOrganisationRequest) returns (OrganisationResponse) {}
+  
+  // Get an organisation by ID
+  rpc getOrganisation (GetOrganisationRequest) returns (OrganisationResponse) {}
+  
+  // Get organisation details by ID
+  rpc getOrganisationDetails (GetOrganisationDetailsRequest) returns (GetOrganisationDetailsResponse) {}
+  
+  // Update an existing organisation
+  rpc updateOrganisation (UpdateOrganisationRequest) returns (OrganisationResponse) {}
+  
+  // // List organisations (with optional filters)
+  // rpc ListOrganisations (ListOrganisationsRequest) returns (ListOrganisationsResponse) {}
+  
+  // Create a new department
+  rpc createDepartment (CreateDepartmentRequest) returns (DepartmentResponse) {}
+  
+  // // Get a department by ID
+  // rpc GetDepartment (GetDepartmentRequest) returns (DepartmentResponse) {}
+  
+  // List departments in an organisation
+  rpc listDepartments (ListDepartmentsRequest) returns (ListDepartmentsResponse) {}
+
+  // Create an invitation for a user to join an organisation
+  rpc inviteUser (InviteUserRequest) returns (InviteResponse) {}
+  
+  // // Get an invite by ID
+  // rpc GetInvite (GetInviteRequest) returns (InviteResponse) {}
+  
+  // // List invites for an organisation
+  // rpc ListInvites (ListInvitesRequest) returns (ListInvitesResponse) {}
+
+  // Accept an invite using an invite link
+  rpc acceptInviteByLink (AcceptInviteByLinkRequest) returns (InviteResponse) {}
+
+  // Get a user's organisations (primary and all)
+  rpc getUserOrganisations (GetUserOrganisationsRequest) returns (UserOrganisationsResponse) {}
+  
+  // Grant a department access to files and folders
+  rpc grantDepartmentAccess (GrantDepartmentAccessRequest) returns (GrantDepartmentAccessResponse) {}
+  
+  // Grant multiple departments access to files and folders in a batch operation
+  rpc batchGrantDepartmentAccess (BatchGrantDepartmentAccessRequest) returns (BatchGrantDepartmentAccessResponse) {}
+  
+  // List top-level folders accessible by a user
+  rpc listTopLevelFolders (ListTopLevelFoldersRequest) returns (ListTopLevelFoldersResponse) {}
+  
+  // Add a new source with credentials
+  rpc addSource (AddSourceRequest) returns (AddSourceResponse) {}
+
+  // List sources for an organisation
+  rpc listSources (ListSourcesRequest) returns (ListSourcesResponse) {}
+
+  // Delete a source
+  rpc deleteSource (DeleteSourceRequest) returns (DeleteSourceResponse) {}
+  
+  // Update source credentials
+  rpc updateSourceCredentials (UpdateSourceCredentialsRequest) returns (UpdateSourceCredentialsResponse) {}
+  
+  // Validate source and get accessible folders
+  rpc validateSource (ValidateSourceRequest) returns (ValidateSourceResponse) {}
+  
+  // List invites sent by a user (inviter)
+  rpc getInviterInvites (ListInviterInvitesRequest) returns (ListInviterInvitesResponse) {}
+  
+  // Get all users in a department
+  rpc getDepartmentUsers (GetDepartmentUsersRequest) returns (GetDepartmentUsersResponse) {}
+  // List folders accessible by specified departments
+  rpc listDepartmentFolders (ListDepartmentFoldersRequest) returns (ListDepartmentFoldersResponse) {}
+  
+  // Add a member to a department
+  rpc addMemberToDepartment (AddMemberToDepartmentRequest) returns (AddMemberToDepartmentResponse) {}
+  
+  // Revoke an organisation's MCP key
+  rpc revokeMcpKey (RevokeMcpKeyRequest) returns (OrganisationResponse) {}
+  
+  // Regenerate an organisation's MCP key
+  rpc regenerateMcpKey (RegenerateMcpKeyRequest) returns (OrganisationResponse) {}
+  
+  // Get an organisation with admin details by ID
+  rpc getOrganisationWithAdmin (GetOrganisationWithAdminRequest) returns (OrganisationWithAdminResponse) {}
+}
+
+// Request message for creating an organisation
+message CreateOrganisationRequest {
+  string name = 1;
+  string website_url = 2;
+  string industry = 3;
+  string created_by = 4;
+  string admin_name = 5;
+  string admin_email = 6;
+  optional string logo = 7;
+}
+
+// Request message for updating an organisation
+message UpdateOrganisationRequest {
+  string id = 1;
+  string user_id = 2;
+  optional string name = 3;
+  optional string website_url = 4;
+  optional string industry = 5;
+  optional string logo = 6;
+}
+
+// Request message for getting an organisation
+message GetOrganisationRequest {
+  string id = 1;
+}
+
+// Organisation entity model
+message OrganisationModel {
+  string id = 1;
+  string name = 2;
+  string website_url = 3;
+  string industry = 4;
+  string created_by = 5;
+  string created_at = 6;
+  string updated_at = 7;
+  optional string logo = 8;
+  optional string mcp_key = 9;  // API key for MCP integration
+  optional bool is_key_revoked = 10;  // Whether the API key has been revoked
+}
+
+message Department {
+  string id = 1;
+  string name = 2;
+  string description = 3;
+  int32 member_count = 4;
+  optional string visibility = 5;
+  int32 agent_count = 6;
+}
+
+message OrganisationAndDeptResponse {
+  OrganisationModel organisation = 1;
+  repeated Department departments = 2;
+}
+
+// Response containing an organisation
+message OrganisationResponse {
+  OrganisationAndDeptResponse organisation = 1;
+  string message = 2;
+  bool success = 3;
+}
+
+// Request message for listing organisations
+message ListOrganisationsRequest {
+  int32 page = 1;
+  int32 page_size = 2;
+  string search_term = 3;
+  string filter_by_industry = 4;
+  string filter_by_tag = 5;
+}
+
+// Response containing a list of organisations
+message ListOrganisationsResponse {
+  repeated OrganisationModel organisations = 1;
+  int32 total_count = 2;
+  int32 page = 3;
+  int32 page_size = 4;
+}
+
+// Request message for creating a department
+message CreateDepartmentRequest {
+  string organisation_id = 1;
+  string name = 2;
+  string description = 3;
+  string parent_department_id = 4; // For hierarchical departments
+  string created_by = 5; // User ID of the creator
+  optional string visibility = 6;
+}
+
+// Request message for getting a department
+message GetDepartmentRequest {
+  string id = 1;
+}
+
+// Request message for listing departments
+message ListDepartmentsRequest {
+  string organisation_id = 1;
+  int32 page = 2;
+  int32 page_size = 3;
+  string search_term = 4;
+  string department_id = 5;
+  string user_id = 6;
+}
+
+// Department entity model
+message DepartmentModel {
+  string id = 1;
+  string organisation_id = 2;
+  string name = 3;
+  string description = 4;
+  string parent_department_id = 5;
+  string created_by = 6;
+  string created_at = 7;
+  string updated_at = 8;
+  int64 member_count = 9;
+  int64 agent_count = 10;
+  optional string visibility = 11;
+}
+
+// Response containing a department
+message DepartmentResponse {
+  DepartmentModel department = 1;
+  string message = 2;
+}
+
+// Response containing a list of departments
+message ListDepartmentsResponse {
+  repeated DepartmentModel departments = 1;
+  int32 total_count = 2;
+  int32 page = 3;
+  int32 page_size = 4;
+}
+
+// Invite status enumeration
+enum InviteStatus {
+  PENDING = 0;
+  ACCEPTED = 1;
+  DECLINED = 2;
+  EXPIRED = 3;
+}
+
+// Request message for inviting a user
+message InviteUserRequest {
+  string email = 1;
+  string organisation_id = 2;
+  string role = 3;
+  string department = 4;
+  string permission = 5;
+  string created_by = 6;
+}
+
+// Request message for getting an invite
+message GetInviteRequest {
+  string id = 1;
+}
+
+// Request message for listing invites
+message ListInvitesRequest {
+  string organisation_id = 1;
+  int32 page = 2;
+  int32 page_size = 3;
+  string status = 4; // Optional filter by status
+}
+
+// Invite model
+message InviteModel {
+  string id = 1;
+  string email = 2;
+  string organisation_id = 3;
+  string department = 4;
+  string role = 5;
+  string permission = 6;
+  string created_by = 7;
+  string status = 8;
+  string created_at = 9;
+  string updated_at = 10;
+  string expires_at = 11;
+}
+
+// Response containing an invite
+message InviteResponse {
+  InviteModel invite = 1;
+  string message = 2;
+  bool success = 3;
+}
+
+// Response containing a list of invites
+message ListInvitesResponse {
+  repeated InviteModel invites = 1;
+  int32 total_count = 2;
+  int32 page = 3;
+  int32 page_size = 4;
+}
+
+// Request message for accepting an invitation via link
+message AcceptInviteByLinkRequest {
+  string invite_token = 1;
+  string current_user_email = 2;
+  string user_id = 3;
+  string user_name = 4;
+  bool accept = 5; // true to accept invitation, false to decline it
+}
+
+// Request message for granting department access to files and folders
+message GrantDepartmentAccessRequest {
+  string department_id = 1;
+  repeated string file_ids = 2;
+  repeated string folder_ids = 3;
+  string user_id = 4; // User granting the access
+}
+
+// Response message for granting department access
+message GrantDepartmentAccessResponse {
+  bool success = 1;
+  string message = 2;
+}
+
+// Department access data for batch operations
+message DepartmentAccessData {
+  string department_id = 1;
+  repeated string file_ids = 2;
+  repeated string folder_ids = 3;
+}
+
+// Request message for batch granting department access to files and folders
+message BatchGrantDepartmentAccessRequest {
+  repeated DepartmentAccessData department_data = 1;
+  string user_id = 2; // User granting the access
+}
+
+// Response message for batch granting department access
+message BatchGrantDepartmentAccessResponse {
+  bool success = 1;
+  string message = 2;
+  repeated string failed_department_ids = 3; // IDs of departments that failed
+}
+
+// Request message for listing top-level folders
+message ListTopLevelFoldersRequest {
+  string user_id = 1;
+}
+
+// Folder model for listing
+message Folder {
+  string id = 1;
+  string name = 2;
+}
+
+// Response message for listing top-level folders
+message ListTopLevelFoldersResponse {
+  bool success = 1;
+  string message = 2;
+  repeated Folder folders = 3;
+}
+
+// Department folders model for responses
+message DepartmentFolders {
+  string department_id = 1;
+  string department_name = 2;
+  repeated Folder folders = 3;
+}
+
+// Request to list folders accessible by departments
+message ListDepartmentFoldersRequest {
+  string organisation_id = 1;
+  repeated string department_ids = 2;
+}
+
+// Response for list department folders operation
+message ListDepartmentFoldersResponse {
+  bool success = 1;
+  string message = 2;
+  repeated DepartmentFolders department_folders = 3;
+}
+
+// Source model
+message SourceModel {
+  string id = 1;
+  string organisation_id = 2;
+  SourceType type = 3;
+  string name = 4;
+  string created_at = 5;
+  string updated_at = 6;
+}
+
+// Request to add a source with service account
+message AddSourceRequest {
+  string organisation_id = 1;
+  SourceType type = 2;
+  string name = 3;
+  string key = 4; // Service Account JSON or API key (required)
+  repeated string file_ids = 5; // Optional list of specific file IDs to sync (for Google Drive)
+  optional string jira_url = 6; // Optional: Jira URL (for Jira sources)
+  optional string jira_email = 7; // Optional: Jira email (for Jira sources)
+}
+
+// File info model for responses
+message FileInfo {
+  string id = 1;
+  string name = 2;
+}
+
+// Response for add source operation
+message AddSourceResponse {
+  bool success = 1;
+  string message = 2;
+  SourceModel source = 3;
+  repeated FileInfo synced_files = 4; // List of files that were synced
+}
+
+// Request to list sources
+message ListSourcesRequest {
+  string organisation_id = 1;
+}
+
+// Response for list sources operation
+message ListSourcesResponse {
+  bool success = 1;
+  string message = 2;
+  repeated SourceModel sources = 3;
+  bool isInitialMapping = 4;  // True if at least one department other than general has access to at least one folder
+}
+
+// Request to delete a source
+message DeleteSourceRequest {
+  string source_id = 1;
+  string user_id = 2; // Admin user ID
+}
+
+// Response for delete source operation
+message DeleteSourceResponse {
+  bool success = 1;
+  string message = 2;
+}
+
+// Request to update source credentials
+message UpdateSourceCredentialsRequest {
+  string source_id = 1;
+  string user_id = 2;
+  string key = 3; // Service Account JSON or API key (required)
+  optional string jira_url = 4; // Optional: Jira URL (for Jira sources)
+  optional string jira_email = 5; // Optional: Jira email (for Jira sources)
+}
+
+// Response for update source credentials operation
+message UpdateSourceCredentialsResponse {
+  bool success = 1;
+  string message = 2;
+  SourceModel source = 3;
+}
+
+// Request to validate a source
+message ValidateSourceRequest {
+  string source_id = 1;
+  string organisation_id = 2;
+}
+
+// Response for source validation
+message ValidateSourceResponse {
+  bool success = 1;
+  string message = 2;
+  repeated Folder accessible_folders = 3;
+}
+
+// Request message for getting a user's organisations
+message GetUserOrganisationsRequest {
+  string user_id = 1;  // ID of the user
+}
+
+// Organisation with user relationship info
+message UserOrganisation {
+  OrganisationModel organisation = 1;  // The organisation details
+  bool is_primary = 2;                 // If this is the user's primary organisation
+  bool is_admin = 3;                   // If the user is an admin in this organisation
+}
+
+// Pending invite information with organisation details
+message PendingInvite {
+  string invite_id = 1;               // ID of the invitation
+  OrganisationModel organisation = 2;  // The organisation details
+  string department = 3;              // Department name
+  string role = 4;                    // Role in the organisation
+  string permission = 5;              // Permission level
+  string inviter_id = 6;              // ID of the person who sent the invite
+  string inviter_name = 7;            // Name of the person who sent the invite
+  string created_at = 8;              // When the invite was created
+  string expires_at = 9;              // When the invite expires
+}
+
+// Response message for GetUserOrganisations
+message UserOrganisationsResponse {
+  repeated UserOrganisation organisations = 1; // All organisations the user belongs to
+  repeated PendingInvite pending_invites = 2;  // Pending invitations for the user
+  bool personal_space = 3;                    // Whether user has a primary org (can't create more)
+  bool has_joined = 4;                        // Whether user has joined an org with invite (can't join more)
+  string message = 5;                         // Response message
+  bool success = 6;
+}
+
+// Request to get invites created by a user (inviter)
+message ListInviterInvitesRequest {
+  string user_id = 1;  // ID of the inviter
+  string type = 2;     // Type of invites to fetch: "ACCEPTED" or "PENDING"
+  string organisation_id = 3;
+}
+
+// Model for invites sent by a user
+message InviterInvite {
+  string invitee_id = 1;       // ID of the invited user (empty for pending invites)
+  string invitee_name = 2;     // Name of the invited user (empty for pending invites)
+  string invitee_email = 3;    // Email of the invited user
+  string organisation_id = 4;  // ID of the organisation
+  string organisation_name = 5; // Name of the organisation
+  string department = 6;       // Department name
+  string role = 7;             // Role in the organisation
+  string permission = 8;       // Permission level
+  string status = 9;           // "ACCEPTED" or "PENDING"
+  string joined_at = 10;       // When the invite was accepted (for accepted invites)
+  string created_at = 11;      // When the invite was created (for pending invites)
+  string expires_at = 12;      // When the invite expires (for pending invites)
+}
+
+// Response message for GetInviterInvites
+message ListInviterInvitesResponse {
+  repeated InviterInvite invites = 1;  // List of invites created by the user
+  string message = 2;                  // Response message
+  bool success = 3;                    // Whether the operation was successful
+}
+
+message UserDepartmentDetail {
+  string name = 1;
+  string role = 2;
+  string permission = 3;
+}
+
+// User model for department user list
+message DepartmentUser {
+  string id = 1;            // User ID
+  string name = 2;          // User name
+  string email = 3;         // User email
+  repeated UserDepartmentDetail departments = 4;
+}
+
+// Request message for getting all users in a department
+message GetDepartmentUsersRequest {
+  string organisation_id = 1;     // Organisation ID
+  string department_id = 2;       // Optional: Department ID (if not provided, defaults to GENERAL)
+  int32 page = 3;                 // Page number (1-based, default: 1)
+  int32 page_size = 4;            // Number of items per page (default: 10)
+}
+
+// Response message for department users list
+message GetDepartmentUsersResponse {
+  repeated DepartmentUser users = 1;  // List of users in the department
+  int32 total_count = 2;              // Total number of users in the department
+  int32 page = 3;                     // Current page number
+  int32 page_size = 4;                // Number of items per page
+  string message = 5;                 // Response message
+  bool success = 6;                   // Whether the operation was successful
+  string department_name = 7;
+  string department_desc = 8;
+}
+
+// Request message for adding a member to a department
+message AddMemberToDepartmentRequest {
+  string organisation_id = 1;     // Organisation ID
+  string department_id = 2;       // Department ID to add the member to
+  string user_id = 3;             // User ID of the user adding the member (must be admin or creator)
+  string member_id = 4;           // User ID of the member to add
+  optional string role = 5;                // Role in department (e.g., "ADMIN", "MEMBER")
+  optional string permission = 6;          // Permission level in department
+}
+
+// Response message for adding a member to a department
+message AddMemberToDepartmentResponse {
+  bool success = 1;               // Whether the operation was successful
+  string message = 2;             // Response message
+}
+
+// Request message for revoking an organisation's MCP key
+message RevokeMcpKeyRequest {
+  string organisation_id = 1;     // Organisation ID
+  string user_id = 2;             // User ID of the user revoking the key (must be admin or creator)
+}
+
+// Request message for regenerating an organisation's MCP key
+message RegenerateMcpKeyRequest {
+  string organisation_id = 1;     // Organisation ID
+  string user_id = 2;             // User ID of the user regenerating the key (must be admin or creator)
+}
+
+// Request message for getting an organisation with admin details
+message GetOrganisationWithAdminRequest {
+  string id = 1;                  // Organisation ID
+}
+
+// Admin information model
+message AdminInfo {
+  string admin_id = 1;            // Admin user ID
+  string email = 2;               // Admin email
+  string full_name = 3;           // Admin full name
+  string created_at = 4;          // When admin was created
+  string updated_at = 5;          // When admin was last updated
+}
+
+// Response message for getting organisation with admin details
+message OrganisationWithAdminResponse {
+  OrganisationAndDeptResponse organisation = 1;  // Organisation details with departments
+  AdminInfo admin = 2;                           // Admin information
+  string message = 3;                            // Response message
+  bool success = 4;                              // Whether the operation was successful
+}
+
+// Request message for getting organisation details
+message GetOrganisationDetailsRequest {
+  string organisation_id = 1;  // Organisation ID
+}
+
+// Response message for getting organisation details
+message GetOrganisationDetailsResponse {
+  OrganisationModel organisation = 1;  // Organisation details
+  string message = 2;                  // Response message
+  bool success = 3;                    // Whether the operation was successful
+}
